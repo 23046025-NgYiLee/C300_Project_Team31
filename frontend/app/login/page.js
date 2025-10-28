@@ -24,8 +24,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         setMessages([result.message || "Login successful!"]);
-        // redirect example:
-        // window.location.href = "/";
+     
       } else {
         setErrors([result.error || "Invalid credentials."]);
       }
