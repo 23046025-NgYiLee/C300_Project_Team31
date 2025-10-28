@@ -19,7 +19,7 @@ const storage= multer.diskStorage({
 })
 const upload= multer({storage:storage});
 
-const port = 3000;
+const port = 4000;
 
 //create a database
 // Create MySQL connection
