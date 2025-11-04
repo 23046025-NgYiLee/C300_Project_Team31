@@ -24,6 +24,13 @@ export default function Home() {
           >
             Forgot Password?
           </a>
+          <a
+            className={styles.secondary}
+            href="/AdminDashboard"
+            rel="noopener noreferrer"
+          >
+            test board?
+          </a>
         </div>
       </main>
     </div>
