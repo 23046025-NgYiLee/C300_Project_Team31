@@ -1,34 +1,37 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import emailjs from "@emailjs/browser";
 import styles from "../page.module.css";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const form = useRef();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
     setError("");
 
-    try {
-      const response = await fetch("/api/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        setMessage(result.message || "Password reset link has been sent to your email!");
-      } else {
-        setError(result.error || "Unable to send reset link. Please try again.");
-      }
-    } catch (err) {
-      setError("Something went wrong. Please try again later.");
-    }
+    emailjs
+      .sendForm(
+        "service_75pbn7g",     // Your EmailJS Service ID
+        "template_kneuvne",    // Your EmailJS Template ID
+        form.current,          // Reference to the form
+        "Wlqwf2LE5qFmZzMTR"    // Your Public Key
+      )
+      .then(
+        (result) => {
+          console.log(result.text);
+          setMessage("Email sent successfully! Please check your inbox.");
+          form.current.reset();
+        },
+        (error) => {
+          console.error(error.text);
+          setError("Failed to send email. Please try again.");
+        }
+      );
   };
 
   return (
@@ -46,11 +49,16 @@ export default function ForgotPasswordPage() {
           <div style={{ color: "red", marginBottom: "16px" }}>{error}</div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "440px" }}>
+        <form
+          ref={form}
+          onSubmit={handleSubmit}
+          style={{ width: "100%", maxWidth: "440px" }}
+        >
           <div style={{ marginBottom: "16px" }}>
             <label>Email Address:</label>
             <input
               type="email"
+              name="email" // must match your EmailJS template variable name
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -65,7 +73,10 @@ export default function ForgotPasswordPage() {
           </div>
 
           <div className={styles.ctas}>
-            <button type="submit" className={`${styles.primary} ${styles.ctaButton}`}>
+            <button
+              type="submit"
+              className={`${styles.primary} ${styles.ctaButton}`}
+            >
               Send Reset Link
             </button>
 
