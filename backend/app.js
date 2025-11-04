@@ -26,10 +26,11 @@ const upload= multer({storage:storage});
 //create a database
 // Create MySQL connection
 const connection = mysql.createConnection({
-    host: 'sql.freedb.tech',
-    user: 'freedb_flower',
-    password: '@?Mv6bKRkpFsz5m',
-    database: 'freedb_C237_Miniproject'
+    host: '8p0w1d.h.filess.io',
+    user: 'inventory_management_thinkclay',
+    password: '39804ddb7407e460450cfae23f25551de56c0c6e',
+    database: 'inventory_management_thinkclay',
+    port: 61002
 });
 
 connection.connect((err) => {
