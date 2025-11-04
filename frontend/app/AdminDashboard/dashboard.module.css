@@ -24,7 +24,7 @@
 }
 
 .card {
-  background-color: #f7f7f7;
+  background-color: #868080;
   padding: 1rem 2rem;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -45,4 +45,13 @@
   padding: 0.5rem;
   border: 1px solid #ddd;
   text-align: left;
+}
+
+.register {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 5px;
 }

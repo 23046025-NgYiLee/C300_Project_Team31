@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import styles from "./dashboard.module.css";
+import Link from "next/link";
+
 
 export default function Dashboard() {
   const [totalItems, setTotalItems] = useState(0);
@@ -22,8 +24,12 @@ export default function Dashboard() {
   return (
     <div className={styles.dashboard}>
       <header className={styles.header}>
+          <Link href="/UserRegister" className={styles.register}>
+            Send register forms
+          </Link>
         <h1>Admin Dashboard</h1>
         <a href="/" className={styles.logout}>Logout</a>
+        
 
       </header>
 
