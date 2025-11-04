@@ -31,6 +31,14 @@ export default function Home() {
           >
             test board?
           </a>
+
+              <a
+            className={styles.secondary}
+            href="/register"
+            rel="noopener noreferrer"
+          >
+            Register Account
+          </a>
         </div>
       </main>
     </div>

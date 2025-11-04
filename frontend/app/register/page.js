@@ -1,37 +1,40 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import styles from "../page.module.css"
+import emailjs from '@emailjs/browser'
 
 export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState([])
   const [messages, setMessages] = useState([])
+  
+  // Place useRef OUTSIDE handleSubmit, tied to the <form>
+  const form = useRef()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErrors([])
     setMessages([])
 
-    try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
+    // You can do validation, async registration logic here (e.g., API call for user registration)
 
-      const result = await response.json()
-
-      if (response.ok) {
-        setMessages([result.message || 'Registration successful!'])
-        // optionally redirect after registration
-        // window.location.href = '/login'
-      } else {
-        setErrors([result.error || 'Registration failed.'])
+    // Send email via EmailJS
+    // 'YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', form.current, 'YOUR_PUBLIC_KEY'
+    emailjs.sendForm(
+      'service_75pbn7g',
+      'template_e3gf5gt',
+      form.current,
+      'Wlqwf2LE5qFmZzMTR'
+    ).then(
+      (result) => {
+        setMessages(['Registration Successful! Email sent.'])
+        form.current.reset()
+      },
+      (error) => {
+        setErrors(['Registration Failed! Please try again.'])
       }
-    } catch (err) {
-      setErrors(['Something went wrong. Please try again later.'])
-    }
+    )
   }
 
   return (
@@ -55,11 +58,12 @@ export default function Register() {
         )}
 
         {/* Registration Form */}
-        <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '440px' }}>
+        <form ref={form} onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '440px' }}>
           <div style={{ marginBottom: '16px' }}>
             <label>Email:</label>
             <input
               type="email"
+              name="email" // Name here matches EmailJS template variables
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -77,6 +81,7 @@ export default function Register() {
             <label>Password:</label>
             <input
               type="password"
+              name="password" // Name here matches EmailJS template if needed
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
