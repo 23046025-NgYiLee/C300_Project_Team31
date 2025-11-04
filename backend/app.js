@@ -10,36 +10,36 @@ const port = 3000;
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
 
-// MySQL connection pool
-const pool = mysql.createPool({
-  host: 'sql.freedb.tech',
-  user: 'freedb_C300FYPT31',
-  password: '@?jhAEYE6qM&HT?82',
-  database: 'freedb_C300FYPT31',
+
+app.use(express.static('public'));
+const storage= multer.diskStorage({
+    destination: (req, file, cb)=> {
+        cb(null,'public/images');
+    },
+    filename:(req,file, cb)=>{
+        cb(null,file.originalname);
+    }
+})
+const upload= multer({storage:storage});
+
+//create a database
+// Create MySQL connection
+const connection = mysql.createConnection({
+    host: 'sql.freedb.tech',
+    user: 'freedb_flower',
+    password: '@?Mv6bKRkpFsz5m',
+    database: 'freedb_C237_Miniproject'
 });
 
-// Multer for image uploads with unique filenames
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/images');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
+connection.connect((err) => {
+    if (err) {
+        console.error('Error connecting to MySQL:', err);
+        return;
+    }
+    console.log('Connected to MySQL database');
 });
 
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files are allowed!'));
-  }
-});
-
-// Home page
 app.get('/', (req, res) => {
   res.render('index');
 });
