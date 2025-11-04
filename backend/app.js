@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 
 const app = express();
-const port = 3000;
+const port = 4000;
 
 // View engine
 app.set('view engine', 'ejs');
@@ -44,6 +44,97 @@ connection.connect((err) => {
 app.get('/', (req, res) => {
   res.render('index');
 });
+
+
+
+app.post("/forgot-password", (req, res) => {
+  const { email } = req.body;
+
+  db.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (results.length === 0)
+      return res.status(404).json({ error: "Email not found" });
+
+    // Generate secure random token
+    const token = crypto.randomBytes(32).toString("hex");
+    const expireTime = new Date(Date.now() + 3600000); // valid for 1 hour
+
+    // Store token in DB
+    db.query(
+      "UPDATE users SET reset_token = ?, reset_expires = ? WHERE email = ?",
+      [token, expireTime, email],
+      (updateErr) => {
+        if (updateErr)
+          return res.status(500).json({ error: "Failed to save token" });
+
+        // Send email
+        const resetLink = `http://localhost:3000/reset-password/${token}`;
+        const mailOptions = {
+          from: "youremail@outlook.com",
+          to: email,
+          subject: "Password Reset Request",
+          html: `
+            <h2>Password Reset</h2>
+            <p>Click the link below to reset your password:</p>
+            <a href="${resetLink}">${resetLink}</a>
+            <p>This link will expire in 1 hour.</p>
+          `,
+        };
+
+        transporter.sendMail(mailOptions, (emailErr) => {
+          if (emailErr)
+            return res.status(500).json({ error: "Failed to send email" });
+
+          res.json({ message: "Password reset link sent to your email." });
+        });
+      }
+    );
+  });
+});
+
+// ✅ Step 2: Handle password reset submission
+app.post("/reset-password/:token", (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  db.query(
+    "SELECT * FROM users WHERE reset_token = ? AND reset_expires > NOW()",
+    [token],
+    async (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error" });
+      if (results.length === 0)
+        return res.status(400).json({ error: "Invalid or expired token" });
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      db.query(
+        "UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE reset_token = ?",
+        [hashedPassword, token],
+        (updateErr) => {
+          if (updateErr)
+            return res.status(500).json({ error: "Failed to update password" });
+          res.json({ message: "Password updated successfully." });
+        }
+      );
+    }
+  );
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // List all flowers
 app.get('/List', (req, res) => {
