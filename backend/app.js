@@ -82,30 +82,16 @@ app.post('/register', async (req, res) => {
 // --------- User Login ---------
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
-  if (!email || !password)
-    return res.status(400).json({ error: 'Email and password are required' });
-
-  // Find user by email
   connection.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
-    if (err) {
-      console.error('SELECT error:', err);
-      return res.status(500).json({ error: 'Database error', details: err.message });
-    }
-
-    if (results.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
+    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+    if (results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
 
     const user = results[0];
-
-    // Compare hashed password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
+    if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
 
-    // Login successful
     res.json({ message: 'Login successful', userId: user.id, email: user.email });
   });
 });
