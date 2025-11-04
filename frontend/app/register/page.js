@@ -13,29 +13,51 @@ export default function Register() {
   const form = useRef()
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setErrors([])
-    setMessages([])
+  e.preventDefault()
+  setErrors([])
+  setMessages([])
 
-    // You can do validation, async registration logic here (e.g., API call for user registration)
-
-    // Send email via EmailJS
-    // 'YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', form.current, 'YOUR_PUBLIC_KEY'
-    emailjs.sendForm(
-      'service_75pbn7g',
-      'template_e3gf5gt',
-      form.current,
-      'Wlqwf2LE5qFmZzMTR'
-    ).then(
-      (result) => {
-        setMessages(['Registration Successful! Email sent.'])
-        form.current.reset()
-      },
-      (error) => {
-        setErrors(['Registration Failed! Please try again.'])
-      }
-    )
+  if (!email || !password) {
+    setErrors(['Email and password are required'])
+    return
   }
+
+  try {
+    // 1. Register user in backend
+    const res = await fetch('http://localhost:4000/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      setErrors([data.error || 'Registration failed'])
+      return
+    }
+
+    // 2. Send confirmation email via EmailJS
+    try {
+      await emailjs.sendForm(
+        'service_75pbn7g',
+        'template_e3gf5gt',
+        form.current,
+        'Wlqwf2LE5qFmZzMTR'
+      )
+      setMessages(['Registration Successful! Email sent.'])
+      form.current.reset()
+      setEmail('')
+      setPassword('')
+    } catch (emailErr) {
+      setErrors(['Registration succeeded, but email failed'])
+    }
+
+  } catch (err) {
+    console.error(err)
+    setErrors(['Registration failed. Please try again'])
+  }
+}
 
   return (
     <div className={styles.page}>

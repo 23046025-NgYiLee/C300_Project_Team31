@@ -1,15 +1,18 @@
 const express = require('express');
 const mysql = require('mysql2');
 const multer = require('multer');
+const bcrypt = require('bcrypt');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 const port = 4000;
 
-// View engine
-app.set('view engine', 'ejs');
-app.use(express.static('public'));
+// Middleware
+app.use(cors());
+app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(express.static('public'))
 
 
 app.use(express.static('public'));
@@ -45,7 +48,67 @@ app.get('/', (req, res) => {
   res.render('index');
 });
 
+// --------- User Registration ---------
+app.post('/register', async (req, res) => {
+  const { email, password } = req.body;
 
+  if (!email || !password)
+    return res.status(400).json({ error: 'Email and password are required' });
+
+  // Check if email already exists
+  connection.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+    if (err) {
+      console.error('SELECT error:', err);
+      return res.status(500).json({ error: 'Database error', details: err.message });
+    }
+    if (results.length > 0) return res.status(409).json({ error: 'Email already registered' });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    connection.query(
+      'INSERT INTO users (email, password) VALUES (?, ?)',
+      [email, hashedPassword],
+      (err, result) => {
+        if (err) {
+          console.error('INSERT error:', err);
+          return res.status(500).json({ error: 'Database error', details: err.message });
+        }
+        res.status(201).json({ message: 'User registered successfully', userId: result.insertId });
+      }
+    );
+  });
+});
+
+// --------- User Login ---------
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password)
+    return res.status(400).json({ error: 'Email and password are required' });
+
+  // Find user by email
+  connection.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+    if (err) {
+      console.error('SELECT error:', err);
+      return res.status(500).json({ error: 'Database error', details: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = results[0];
+
+    // Compare hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Login successful
+    res.json({ message: 'Login successful', userId: user.id, email: user.email });
+  });
+});
 
 app.post("/forgot-password", (req, res) => {
   const { email } = req.body;
