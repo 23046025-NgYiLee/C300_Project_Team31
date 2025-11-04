@@ -24,10 +24,10 @@ const port = 3000;
 //create a database
 // Create MySQL connection
 const connection = mysql.createConnection({
-    host: 'sql.freedb.tech',
-    user: 'freedb_flower',
-    password: '@?Mv6bKRkpFsz5m',
-    database: 'freedb_C237_Miniproject'
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'inventory_management_system'
 });
 
 connection.connect((err) => {
