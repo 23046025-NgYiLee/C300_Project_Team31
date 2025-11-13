@@ -9,7 +9,7 @@ export default function Register() {
   const [messages, setMessages] = useState([])
   const form = useRef()
 
-  // ✅ Function to generate a random password
+  // Function to generate a random password
   const generatePassword = (length = 10) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
     let password = ''
@@ -24,18 +24,18 @@ export default function Register() {
     setErrors([])
     setMessages([])
 
-    // ✅ Generate random password automatically
+    // Generate random password automatically
     const randomPassword = generatePassword()
 
-    // ✅ Append the generated password to the form data before sending
+    // Append the generated password to the form data before sending
     form.current.password.value = randomPassword
 
-    // ✅ Send email via EmailJS
+    //  Send email via EmailJS
     emailjs.sendForm(
-      'service_75pbn7g',       // Your EmailJS service ID
-      'template_e3gf5gt',      // Your EmailJS template ID
-      form.current,            // The form reference
-      'Wlqwf2LE5qFmZzMTR'      // Your EmailJS public key
+      'service_75pbn7g',       
+      'template_e3gf5gt',      
+      form.current,            
+      'Wlqwf2LE5qFmZzMTR'      
     ).then(
       (result) => {
         console.log(result.text)

@@ -3,45 +3,64 @@ import React, { useState, useEffect } from "react";
 import styles from "./dashboard.module.css";
 import Link from "next/link";
 
-
-export default function Dashboard() {
-  const [totalItems, setTotalItems] = useState(0);
-  const [lowStock, setLowStock] = useState([]);
-  const [recent, setRecent] = useState([]);
+export default function DashboardHome() {
+  // User Greeting & Logout
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const inventory = [
-      { id: 1, name: "Rose", quantity: 2, price: 5 },
-      { id: 2, name: "Tulip", quantity: 10, price: 7 },
-      { id: 3, name: "Orchid", quantity: 0, price: 12 },
-    ];
-
-    setTotalItems(inventory.reduce((acc, item) => acc + item.quantity, 0));
-    setLowStock(inventory.filter(item => item.quantity <= 5));
-    setRecent(inventory.slice(-3));
+    const loggedUser = JSON.parse(localStorage.getItem("user")) || { name: "Admin" };
+    setUser(loggedUser);
   }, []);
 
-  return (
-    <div className={styles.dashboard}>
-      <header className={styles.header}>
-          <Link href="/UserRegister" className={styles.register}>
-            Send register forms
-          </Link>
-        <h1>Admin Dashboard</h1>
-        <a href="/" className={styles.logout}>Logout</a>
-        
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  };
 
+  // Inventory Data (to be populated from MySQL or API later)
+  const [totalItems, setTotalItems] = useState(0);
+
+  // Feature Cards
+  const features = [
+    { title: "Inbound Production Tracking", desc: "Input production numbers for incoming stock." },
+    { title: "Outbound Production Tracking", desc: "Track outbound production numbers efficiently." },
+    { title: "Stock Movement Monitoring", desc: "Track movement transactions for traceability." },
+    { title: "Stock Taking Capabilities", desc: "Accurate inventory counting in real-time." },
+    { title: "Comprehensive Reporting Tools", desc: "Detailed analytics to support decision making." },
+    { title: "Supervisor Access Features", desc: "Ensure oversight and accuracy in stock management." }
+  ];
+
+  return (
+    <div className={styles.page}>
+      {/* User Greeting & Logout */}
+      {user && (
+        <div className={styles.userSection}>
+          <span className={styles.userWelcome}>Welcome, {user.name}</span>
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            Logout
+          </button>
+        </div>
+      )}
+
+      {/* Admin Header and Register Link */}
+      <header className={styles.header}>
+        <Link href="/UserRegister" className={styles.register}>
+          Send register forms
+        </Link>
+        <h1 className={styles.heading}>Admin Dashboard</h1>
+       
       </header>
 
+      {/* Inventory Summary and Placeholders */}
       <section className={styles.summary}>
         <div className={styles.card}>
-          <h5>Total Inventory</h5>
-          <h2>{totalItems}</h2>
+          <span className={styles.cardLabel}>Total Inventory</span>
+          <span className={styles.cardValue}>{totalItems}</span>
         </div>
       </section>
 
       <section className={styles.lowStock}>
-        <h3>Low Stock Alerts</h3>
+        <h3 className={styles.sectionTitle}>Low Stock Alerts</h3>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -50,24 +69,16 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {lowStock.length > 0 ? (
-              lowStock.map(item => (
-                <tr key={item.id}>
-                  <td className={styles.td}>{item.name}</td>
-                  <td className={styles.td} style={{ color: "red" }}>{item.quantity}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td className={styles.td} colSpan="2">All stock levels are healthy.</td>
-              </tr>
-            )}
+            <tr>
+              <td className={styles.td} colSpan="2" style={{ textAlign: "center", color: "#999" }}>
+                No data to display. Connect to inventory database.
+              </td>
+            </tr>
           </tbody>
         </table>
       </section>
-
       <section className={styles.recent}>
-        <h3>Recently Added Items</h3>
+        <h3 className={styles.sectionTitle}>Recently Added Items</h3>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -77,16 +88,27 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {recent.map(item => (
-              <tr key={item.id}>
-                <td className={styles.td}>{item.name}</td>
-                <td className={styles.td}>{item.quantity}</td>
-                <td className={styles.td}>${item.price}</td>
-              </tr>
-            ))}
+            <tr>
+              <td className={styles.td} colSpan="3" style={{ textAlign: "center", color: "#999" }}>
+                No data to display. Connect to inventory database.
+              </td>
+            </tr>
           </tbody>
         </table>
       </section>
+
+      {/* Inventory Features as Cards */}
+      <main className={styles.main}>
+        <h2 className={styles.sectionTitle}>Inventory Features</h2>
+        <div className={styles.cardContainer}>
+          {features.map((f, i) => (
+            <div key={i} className={styles.cardFeature}>
+              <h3 className={styles.featureTitle}>{f.title}</h3>
+              <p className={styles.featureDesc}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 }
