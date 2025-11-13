@@ -2,6 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
+bcrypt.hash('thispassword', 10).then(console.log);
 const path = require('path');
 const cors = require('cors');
 
@@ -84,17 +85,44 @@ app.post('/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
-  connection.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+  // Check admin (user table)
+  connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, adminResults) => {
     if (err) return res.status(500).json({ error: 'Database error', details: err.message });
-    if (results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
-
-    const user = results[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
-
-    res.json({ message: 'Login successful', userId: user.id, email: user.email });
+    if (adminResults && adminResults.length > 0) {
+      const admin = adminResults[0];
+      // Assumes password is hashed using bcrypt!
+      const isMatch = await bcrypt.compare(password, admin.password);
+      if (isMatch) return res.json({ message: 'Login successful', userId: admin.user_id, email: admin.email, role: 'admin' });
+    }
+    // Check staff/users
+    connection.query('SELECT * FROM users WHERE email = ?', [email], async (err2, staffResults) => {
+      if (err2) return res.status(500).json({ error: 'Database error', details: err2.message });
+      if (staffResults && staffResults.length > 0) {
+        const staff = staffResults[0];
+        const isMatch = await bcrypt.compare(password, staff.password);
+        if (isMatch) return res.json({ message: 'Login successful', userId: staff.id, email: staff.email, role: 'staff' });
+      }
+      // Not found/invalid
+      return res.status(401).json({ error: 'Invalid email or password' });
+    });
   });
 });
+
+//app.post('/login', (req, res) => {
+  //const { email, password } = req.body;
+  //if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+  //connection.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+    //if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+    //if (results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
+
+    //const user = results[0];
+    //const isMatch = await bcrypt.compare(password, user.password);
+    //if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
+
+  //  res.json({ message: 'Login successful', userId: user.id, email: user.email });
+//  });
+//});
 
 app.post("/forgot-password", (req, res) => {
   const { email } = req.body;
@@ -168,12 +196,6 @@ app.post("/reset-password/:token", (req, res) => {
     }
   );
 });
-
-
-
-
-
-
 
 
 

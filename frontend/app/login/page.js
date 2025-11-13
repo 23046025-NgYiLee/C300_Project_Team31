@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
-import '../generalstyle.css';
-
 import { useRouter } from "next/navigation";
+// Import your generalstyle.css in your app layout, not here
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -29,9 +28,14 @@ export default function LoginPage() {
         setMessages([result.message || "Login successful!"]);
         localStorage.setItem("user", JSON.stringify({
           email: result.email,
-          userId: result.userId
+          userId: result.userId,
+          role: result.role
         }));
-        router.push("/AdminDashboard");
+
+        // Redirect based on user role
+        if (result.role === "admin") router.push("/AdminDashboard");
+        else if (result.role === "staff") router.push("/StaffDashboard");
+        else router.push("/");
       } else {
         setErrors([result.error || "Invalid credentials."]);
       }
