@@ -1,104 +1,46 @@
-"use client";
-import React, { useState, useEffect } from "react";
-import styles from "./dashboard.module.css";
-import Link from "next/link";
+// app/home/page.js
+'use client';
+import { useEffect, useState } from 'react';
+import styles from '../page.module.css';
 
-export default function DashboardHome() {
-  // User Greeting & Logout
+export default function Home() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const loggedUser = JSON.parse(localStorage.getItem("user")) || { name: "Staff" };
+    const loggedUser = JSON.parse(localStorage.getItem('user')) || { name: 'Staff' };
     setUser(loggedUser);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    window.location.href = "/login";
+    localStorage.removeItem('user');
+    window.location.href = '/login';
   };
 
-  // Inventory Data (to be populated from MySQL or API later)
-  const [totalItems, setTotalItems] = useState(0);
-
-  // Feature Cards
   const features = [
-    { title: "Inbound Production Tracking", desc: "Input production numbers for incoming stock." },
-    { title: "Outbound Production Tracking", desc: "Track outbound production numbers efficiently." },
-    { title: "Stock Movement Monitoring", desc: "Track movement transactions for traceability." },
-    { title: "Stock Taking Capabilities", desc: "Accurate inventory counting in real-time." },
-    { title: "Comprehensive Reporting Tools", desc: "Detailed analytics to support decision making." },
-    { title: "Supervisor Access Features", desc: "Ensure oversight and accuracy in stock management." }
+    { title: 'Inbound Production Tracking', desc: 'Input production numbers for incoming stock.' },
+    { title: 'Outbound Production Tracking', desc: 'Track outbound production numbers efficiently.' },
+    { title: 'Stock Movement Monitoring', desc: 'Track movement transactions for traceability.' },
+    { title: 'Stock Taking Capabilities', desc: 'Accurate inventory counting in real-time.' },
+    { title: 'Comprehensive Reporting Tools', desc: 'Detailed analytics to support decision making.' },
+    { title: 'Supervisor Access Features', desc: 'Ensure oversight and accuracy in stock management.' },
   ];
 
   return (
     <div className={styles.page}>
-      {/* User Greeting & Logout */}
       {user && (
         <div className={styles.userSection}>
-          <span className={styles.userWelcome}>Welcome, {user.name}</span>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            Logout
-          </button>
+          <p>Welcome, {user.name}</p>
+          <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
         </div>
       )}
 
-
-     
-
-      {/* Inventory Summary and Placeholders */}
-      <section className={styles.summary}>
-        <div className={styles.card}>
-          <span className={styles.cardLabel}>Total Inventory</span>
-          <span className={styles.cardValue}>{totalItems}</span>
-        </div>
-      </section>
-
-      <section className={styles.lowStock}>
-        <h3 className={styles.sectionTitle}>Low Stock Alerts</h3>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.th}>Name</th>
-              <th className={styles.th}>Quantity</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className={styles.td} colSpan="2" style={{ textAlign: "center", color: "#999" }}>
-                No data to display. Connect to inventory database.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-      <section className={styles.recent}>
-        <h3 className={styles.sectionTitle}>Recently Added Items</h3>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.th}>Name</th>
-              <th className={styles.th}>Quantity</th>
-              <th className={styles.th}>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className={styles.td} colSpan="3" style={{ textAlign: "center", color: "#999" }}>
-                No data to display. Connect to inventory database.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      {/* Inventory Features as Cards */}
       <main className={styles.main}>
-        <h2 className={styles.sectionTitle}>Inventory Features</h2>
+        <h1>Inventory Dashboard</h1>
         <div className={styles.cardContainer}>
           {features.map((f, i) => (
-            <div key={i} className={styles.cardFeature}>
-              <h3 className={styles.featureTitle}>{f.title}</h3>
-              <p className={styles.featureDesc}>{f.desc}</p>
+            <div key={i} className={styles.card}>
+              <h2>{f.title}</h2>
+              <p>{f.desc}</p>
             </div>
           ))}
         </div>

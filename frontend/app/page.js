@@ -1,23 +1,18 @@
-
-import styles from "./page.module.css";
+import './generalstyle.css';
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-       
-        <div className={styles.intro}>
+    <div className="page">
+      <main className="main">
+        <div className="intro">
           <h1>To get started with management please login.</h1>
-         
         </div>
-        <div className={styles.ctas}>
+        <div className="ctas">
+          <a className="primary" href="/login">
+            Login
+          </a>
           <a
-            className={styles.primary}
-            href="/login"
-          >Login</a>
-
-          <a
-            className={styles.secondary}
+            className="secondary"
             href="/forgot-password"
             target="_blank"
             rel="noopener noreferrer"
@@ -25,15 +20,14 @@ export default function Home() {
             Forgot Password?
           </a>
           <a
-            className={styles.secondary}
+            className="secondary"
             href="/AdminDashboard"
             rel="noopener noreferrer"
           >
             test board?
           </a>
-
-              <a
-            className={styles.secondary}
+          <a
+            className="secondary"
             href="/register"
             rel="noopener noreferrer"
           >
@@ -44,3 +38,4 @@ export default function Home() {
     </div>
   );
 }
+  

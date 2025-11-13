@@ -1,68 +1,65 @@
 'use client'
 import { useRef, useState } from 'react'
-import styles from "../page.module.css"
 import emailjs from '@emailjs/browser'
+// import '../generalstyle.css'; // Import globally in app/layout.js, not in every page
 
 export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState([])
   const [messages, setMessages] = useState([])
-  
-  // Place useRef OUTSIDE handleSubmit, tied to the <form>
   const form = useRef()
 
   const handleSubmit = async (e) => {
-  e.preventDefault()
-  setErrors([])
-  setMessages([])
+    e.preventDefault()
+    setErrors([])
+    setMessages([])
 
-  if (!email || !password) {
-    setErrors(['Email and password are required'])
-    return
-  }
-
-  try {
-    // 1. Register user in backend
-    const res = await fetch('http://localhost:4000/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    })
-
-    const data = await res.json()
-
-    if (!res.ok) {
-      setErrors([data.error || 'Registration failed'])
+    if (!email || !password) {
+      setErrors(['Email and password are required'])
       return
     }
 
-    // 2. Send confirmation email via EmailJS
     try {
-      await emailjs.sendForm(
-        'service_75pbn7g',
-        'template_e3gf5gt',
-        form.current,
-        'Wlqwf2LE5qFmZzMTR'
-      )
-      setMessages(['Registration Successful! Email sent.'])
-      form.current.reset()
-      setEmail('')
-      setPassword('')
-    } catch (emailErr) {
-      setErrors(['Registration succeeded, but email failed'])
-    }
+      // 1. Register user in backend
+      const res = await fetch('http://localhost:4000/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
 
-  } catch (err) {
-    console.error(err)
-    setErrors(['Registration failed. Please try again'])
+      const data = await res.json()
+
+      if (!res.ok) {
+        setErrors([data.error || 'Registration failed'])
+        return
+      }
+
+      // 2. Send confirmation email via EmailJS
+      try {
+        await emailjs.sendForm(
+          'service_75pbn7g',
+          'template_e3gf5gt',
+          form.current,
+          'Wlqwf2LE5qFmZzMTR'
+        )
+        setMessages(['Registration Successful! Email sent.'])
+        form.current.reset()
+        setEmail('')
+        setPassword('')
+      } catch (emailErr) {
+        setErrors(['Registration succeeded, but email failed'])
+      }
+
+    } catch (err) {
+      setErrors(['Registration failed. Please try again'])
+    }
   }
-}
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <div className={styles.intro}>
+    <div className="page">
+      <main className="main">
+        <div className="intro">
           <h1>Create Your Account</h1>
           <p>Sign up to access all features.</p>
         </div>
@@ -85,7 +82,7 @@ export default function Register() {
             <label>Email:</label>
             <input
               type="email"
-              name="email" // Name here matches EmailJS template variables
+              name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -98,12 +95,11 @@ export default function Register() {
               }}
             />
           </div>
-
           <div style={{ marginBottom: '16px' }}>
             <label>Password:</label>
             <input
               type="password"
-              name="password" // Name here matches EmailJS template if needed
+              name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -116,13 +112,11 @@ export default function Register() {
               }}
             />
           </div>
-
-          <div className={styles.ctas}>
-            <button type="submit" className={`${styles.primary} ${styles.ctaButton}`}>
+          <div className="ctas">
+            <button type="submit" className="primary ctaButton">
               Register
             </button>
-
-            <a href="/login" className={styles.secondary}>
+            <a href="/login" className="secondary">
               Already have an account?
             </a>
           </div>

@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
-import styles from "../page.module.css"
 import emailjs from '@emailjs/browser'
+// Only import '../generalstyle.css' ONCE, preferably in /app/layout.js
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -38,22 +38,20 @@ export default function Register() {
       'Wlqwf2LE5qFmZzMTR'      
     ).then(
       (result) => {
-        console.log(result.text)
         setMessages([`Registration successful! Password has been emailed to ${email}.`])
         form.current.reset()
       },
       (error) => {
-        console.error(error.text)
         setErrors(['Registration failed! Please try again.'])
       }
     )
   }
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <div className={styles.intro}>
-          <h1>Create a Account for workers</h1>
+    <div className="page">
+      <main className="main">
+        <div className="intro">
+          <h1>Create an Account for Workers</h1>
         </div>
 
         {/* Alerts */}
@@ -74,7 +72,7 @@ export default function Register() {
             <label>Email:</label>
             <input
               type="email"
-              name="email" // Must match your EmailJS template variable
+              name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -91,15 +89,15 @@ export default function Register() {
           {/* Hidden input for generated password */}
           <input type="hidden" name="password" />
 
-          <div className={styles.ctas}>
+          <div className="ctas">
             <button
               type="submit"
-              className={`${styles.primary} ${styles.ctaButton}`}
+              className="primary ctaButton"
             >
               Register
             </button>
 
-            <a href="/AdminDashboard" className={styles.secondary}>
+            <a href="/AdminDashboard" className="secondary">
               Back to Dashboard
             </a>
           </div>

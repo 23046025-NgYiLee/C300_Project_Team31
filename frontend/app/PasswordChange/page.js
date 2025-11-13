@@ -1,7 +1,9 @@
 'use client'
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import styles from "../page.module.css"
+import '../generalstyle.css';
+
+
 
 export default function PasswordChange() {
   const router = useRouter()

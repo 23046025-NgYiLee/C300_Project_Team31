@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import emailjs from "@emailjs/browser";
-import styles from "../page.module.css";
+// import '../generalstyle.css';  // Import globally ONCE, not in every page
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -16,28 +16,26 @@ export default function ForgotPasswordPage() {
 
     emailjs
       .sendForm(
-        "service_75pbn7g",     // Your EmailJS Service ID
-        "template_kneuvne",    // Your EmailJS Template ID
-        form.current,          // Reference to the form
-        "Wlqwf2LE5qFmZzMTR"    // Your Public Key
+        "service_75pbn7g",      // Your EmailJS Service ID
+        "template_kneuvne",     // Your EmailJS Template ID
+        form.current,           // Reference to the form
+        "Wlqwf2LE5qFmZzMTR"     // Your Public Key
       )
       .then(
         (result) => {
-          console.log(result.text);
           setMessage("Email sent successfully! Please check your inbox.");
           form.current.reset();
         },
         (error) => {
-          console.error(error.text);
           setError("Failed to send email. Please try again.");
         }
       );
   };
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <div className={styles.intro}>
+    <div className="page">
+      <main className="main">
+        <div className="intro">
           <h1>Forgot Password?</h1>
           <p>Enter your email address below and we’ll send you a reset link.</p>
         </div>
@@ -58,7 +56,7 @@ export default function ForgotPasswordPage() {
             <label>Email Address:</label>
             <input
               type="email"
-              name="email" // must match your EmailJS template variable name
+              name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -72,15 +70,15 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
-          <div className={styles.ctas}>
+          <div className="ctas">
             <button
               type="submit"
-              className={`${styles.primary} ${styles.ctaButton}`}
+              className="primary ctaButton"
             >
               Send Reset Link
             </button>
 
-            <a href="/login" className={styles.secondary}>
+            <a href="/login" className="secondary">
               Back to Login
             </a>
           </div>

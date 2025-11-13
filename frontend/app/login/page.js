@@ -1,12 +1,15 @@
 "use client";
 import { useState } from "react";
-import styles from "../page.module.css"; // using your existing styling
+import '../generalstyle.css';
+
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState([]);
   const [messages, setMessages] = useState([]);
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +27,11 @@ export default function LoginPage() {
 
       if (response.ok) {
         setMessages([result.message || "Login successful!"]);
-     
+        localStorage.setItem("user", JSON.stringify({
+          email: result.email,
+          userId: result.userId
+        }));
+        router.push("/AdminDashboard");
       } else {
         setErrors([result.error || "Invalid credentials."]);
       }
@@ -34,14 +41,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <div className={styles.intro}>
+    <div className="page">
+      <main className="main">
+        <div className="intro">
           <h1>Welcome Back!</h1>
           <p>Please log in to access your account.</p>
         </div>
-
-        {/* Alerts */}
         {errors.length > 0 && (
           <div style={{ color: "red", marginBottom: "16px" }}>
             {errors.map((error, i) => (
@@ -56,8 +61,6 @@ export default function LoginPage() {
             ))}
           </div>
         )}
-
-        {/* Login Form */}
         <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "440px" }}>
           <div style={{ marginBottom: "16px" }}>
             <label>Email:</label>
@@ -75,7 +78,6 @@ export default function LoginPage() {
               }}
             />
           </div>
-
           <div style={{ marginBottom: "16px" }}>
             <label>Password:</label>
             <input
@@ -92,17 +94,14 @@ export default function LoginPage() {
               }}
             />
           </div>
-
-          <div className={styles.ctas}>
-            <button type="submit" className={`${styles.primary} ${styles.ctaButton}`}>
+          <div className="ctas">
+            <button type="submit" className="primary ctaButton">
               Login
             </button>
-
-            <a href="/forgot-password" className={styles.secondary}>
+            <a href="/forgot-password" className="secondary">
               Forgot Password?
             </a>
-
-            <a href="/register" className={styles.secondary}>
+            <a href="/register" className="secondary">
               Register Account
             </a>
           </div>
