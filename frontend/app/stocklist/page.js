@@ -72,12 +72,9 @@ export default function StockListPage() {
                     </div>
                     <div className={styles.stockBtnBar}>
                         <div class="d-flex justify-content-between">
-                            <a href="/detail/<%= flowers[i].Flowerid %>"  className={styles.stockBtn}>See flower detail</a>
+                            <a  href="/editstock"  className={styles.stockBtn}>See flower detail</a>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <a href="/editflower/<%= flowers[i].Flowerid %>"  className={styles.stockBtn}>edit flower detail</a>
-                        </div>
-
+                        
                         <div class="d-flex justify-content-between">
                             <a href="/deleteFlower/<%= flowers[i].Flowerid %>" class="btn btn-dark btn-sm" 
                                     onclick="return confirm('Are you sure you want to delete this product')">Delete</a>

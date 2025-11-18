@@ -14,15 +14,14 @@ export default function Home() {
           <a
             className="secondary"
             href="/forgot-password"
-            target="_blank"
-            rel="noopener noreferrer"
+     
           >
             Forgot Password?
           </a>
           <a
             className="secondary"
             href="/AdminDashboard"
-            rel="noopener noreferrer"
+         
           >
             test board?
           </a>
