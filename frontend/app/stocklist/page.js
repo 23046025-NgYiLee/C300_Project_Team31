@@ -68,7 +68,7 @@ export default function StockListPage() {
                       Brand: {stock.brand}<br />
                       Class: {stock.class}<br />
                       Type: {stock.type}<br />
-                      ${stock.price ? Number(stock.price).toFixed(2) : "N/A"}
+                      
                     </div>
                     <div className={styles.stockBtnBar}>
                         <div class="d-flex justify-content-between">
