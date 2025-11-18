@@ -61,6 +61,12 @@ export default function DashboardHome() {
 
       <section className={styles.lowStock}>
         <h3 className={styles.sectionTitle}>Low Stock Alerts</h3>
+          <Link href="/addstocks" className={styles.register}>
+            Add Stocks
+          </Link>
+           <Link href="/stocklist" className={styles.register}>
+            stock list
+          </Link>
         <table className={styles.table}>
           <thead>
             <tr>

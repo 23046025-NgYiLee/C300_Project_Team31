@@ -1,0 +1,151 @@
+/* StockList.module.css */
+
+.stockPage {
+  min-height: 100vh;
+  background: linear-gradient(120deg, #ece9f7 0%, #f7f7fa 100%);
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  padding-bottom: 36px;
+}
+
+/* Main container for inner content */
+.stockMain {
+  background: #fff;
+  box-shadow: 0 6px 36px rgba(74,78,105,0.09);
+  border-radius: 18px;
+  margin: 36px auto;
+  padding: 48px 36px 36px 36px;
+  max-width: 1200px;
+  width: 98vw;
+}
+
+.stockIntro {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.stockIntro h1 {
+  color: #4a4e69;
+  font-size: 2.3rem;
+  font-weight: 700;
+}
+
+.searchBar {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 32px auto;
+}
+
+.cardGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+}
+
+.cardCol {
+  flex: 1 1 340px;
+  max-width: 370px;
+  min-width: 270px;
+  display: flex;
+  align-items: stretch;
+}
+
+.stockCard {
+  width: 100%;
+  background: #faf9f6;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(74, 78, 105, 0.13);
+  border: 1.5px solid #efeded;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.18s;
+}
+.stockCard:hover {
+  box-shadow: 0 8px 30px rgba(74, 78, 105, 0.20);
+  border-color: #c9ada7;
+}
+
+.stockImgWrap {
+  background: #816748;
+  padding: 18px 0;
+  text-align: center;
+}
+.stockImage {
+  width: 80%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.stockCardBody {
+  padding: 17px 18px 16px 18px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.stockCardTitle {
+  color: #4a4e69;
+  font-size: 1.19rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.stockCardDesc {
+  color: #35354a;
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+
+.stockBtnBar {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.stockBtn {
+  flex: 1;
+  background: linear-gradient(90deg, #6c63ff 60%, #48c6ef 100%);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 0;
+  font-size: 0.98rem;
+  font-weight: 500;
+  margin-bottom: 0;
+  text-decoration: none;
+  box-shadow: 0 1px 4px rgba(74,78,105,0.07);
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  text-align: center;
+}
+
+.stockBtn:hover {
+  background: linear-gradient(90deg, #5a54c9 80%, #3996b8 100%);
+  color: #fff;
+  box-shadow: 0 2px 7px rgba(106, 70, 255, 0.18);
+}
+
+@media (max-width: 900px) {
+  .stockMain {
+    padding: 28px 6vw 24px 6vw;
+    max-width: 98vw;
+  }
+  .cardGrid {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .stockIntro h1 {
+    font-size: 1.35rem;
+  }
+  .stockMain {
+    padding: 14px 3vw 12px 3vw;
+  }
+  .cardCol {
+    max-width: 98vw;
+    min-width: 90vw;
+  }
+}
