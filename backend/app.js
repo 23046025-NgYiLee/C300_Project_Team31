@@ -57,7 +57,7 @@ app.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
 
   // Check if email already exists
-  connection.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+  connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
     if (err) {
       console.error('SELECT error:', err);
       return res.status(500).json({ error: 'Database error', details: err.message });
@@ -67,7 +67,7 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     connection.query(
-      'INSERT INTO users (email, password) VALUES (?, ?)',
+      'INSERT INTO user (email, password) VALUES (?, ?)',
       [email, hashedPassword],
       (err, result) => {
         if (err) {
@@ -94,8 +94,8 @@ app.post('/login', (req, res) => {
       const isMatch = await bcrypt.compare(password, admin.password);
       if (isMatch) return res.json({ message: 'Login successful', userId: admin.user_id, email: admin.email, role: 'admin' });
     }
-    // Check staff/users
-    connection.query('SELECT * FROM users WHERE email = ?', [email], async (err2, staffResults) => {
+    // Check staff/user
+    connection.query('SELECT * FROM user WHERE email = ?', [email], async (err2, staffResults) => {
       if (err2) return res.status(500).json({ error: 'Database error', details: err2.message });
       if (staffResults && staffResults.length > 0) {
         const staff = staffResults[0];
@@ -112,7 +112,7 @@ app.post('/login', (req, res) => {
   //const { email, password } = req.body;
   //if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
-  //connection.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+  //connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
     //if (err) return res.status(500).json({ error: 'Database error', details: err.message });
     //if (results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
 
@@ -127,7 +127,7 @@ app.post('/login', (req, res) => {
 app.post("/forgot-password", (req, res) => {
   const { email } = req.body;
 
-  db.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
+  db.query("SELECT * FROM user WHERE email = ?", [email], (err, results) => {
     if (err) return res.status(500).json({ error: "Database error" });
     if (results.length === 0)
       return res.status(404).json({ error: "Email not found" });
@@ -138,7 +138,7 @@ app.post("/forgot-password", (req, res) => {
 
     // Store token in DB
     db.query(
-      "UPDATE users SET reset_token = ?, reset_expires = ? WHERE email = ?",
+      "UPDATE user SET reset_token = ?, reset_expires = ? WHERE email = ?",
       [token, expireTime, email],
       (updateErr) => {
         if (updateErr)
@@ -175,7 +175,7 @@ app.post("/reset-password/:token", (req, res) => {
   const { newPassword } = req.body;
 
   db.query(
-    "SELECT * FROM users WHERE reset_token = ? AND reset_expires > NOW()",
+    "SELECT * FROM user WHERE reset_token = ? AND reset_expires > NOW()",
     [token],
     async (err, results) => {
       if (err) return res.status(500).json({ error: "Database error" });
@@ -185,7 +185,7 @@ app.post("/reset-password/:token", (req, res) => {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
 
       db.query(
-        "UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE reset_token = ?",
+        "UPDATE user SET password = ?, reset_token = NULL, reset_expires = NULL WHERE reset_token = ?",
         [hashedPassword, token],
         (updateErr) => {
           if (updateErr)
@@ -322,6 +322,16 @@ app.get('/search', (req, res) => {
     if (results.length > 0) res.redirect(`/detail/${results[0].Flowerid}`);
     else res.send('No flower found with that name');
   });
+});
+
+app.get('/stocks', (req, res) => {
+    pool.query("SELECT * FROM stocks", (err, results) => {
+        if (err) {
+            console.error("Error fetching stocks:", err);
+            return res.status(500).json({ error: "Failed to fetch stocks" });
+        }
+        res.json(results);
+    });
 });
 
 // Start server

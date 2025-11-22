@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import styles from "./dashboard.module.css";
+import styles from "../AdminDashboard/dashboard.module.css";
 import Link from "next/link";
 
 export default function DashboardHome() {
