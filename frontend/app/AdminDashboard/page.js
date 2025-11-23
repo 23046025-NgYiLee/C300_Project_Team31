@@ -18,10 +18,26 @@ export default function DashboardHome() {
     window.location.href = "/login";
   };
 
-  // Inventory Data (to be populated from MySQL or API later)
+  // Inventory Data
+  const [stocks, setStocks] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Feature Cards
+  // Load stock data from backend
+  useEffect(() => {
+  async function loadStocks() {
+    try {
+      const res = await fetch("http://localhost:4000/stocklist");
+      const data = await res.json();
+      setStocks(data);
+    } catch (err) {
+      console.error("Error loading stocks:", err);
+    }
+  }
+  loadStocks();
+}, []);
+
+
+  // Inventory Feature Cards
   const features = [
     {
       title: "Inbound Production Tracking",
@@ -55,21 +71,17 @@ export default function DashboardHome() {
       {user && (
         <div className={styles.userSection}>
           <span className={styles.userWelcome}>Welcome, {user.name}</span>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            Logout
-          </button>
+          <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
         </div>
       )}
 
-      {/* Admin Header and Register Link */}
+      {/* Admin Header */}
       <header className={styles.header}>
-        <Link href="/UserRegister" className={styles.register}>
-          Send register forms
-        </Link>
+        <Link href="/UserRegister" className={styles.register}>Send register forms</Link>
         <h1 className={styles.heading}>Admin Dashboard</h1>
       </header>
 
-      {/* Inventory Summary and Placeholders */}
+      {/* Inventory Summary */}
       <section className={styles.summary}>
         <div className={styles.card}>
           <span className={styles.cardLabel}>Total Inventory</span>
@@ -77,20 +89,13 @@ export default function DashboardHome() {
         </div>
       </section>
 
-      {/* Low Stock Section with Actions in Header */}
+      {/* Low Stock Alerts */}
       <section className={styles.lowStock}>
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>Low Stock Alerts</h3>
-          <div className={styles.actions}>
-            <Link href="/addstocks" className={styles.register}>
-              Add Stocks
-            </Link>
-            <Link href="/stocklist" className={styles.register}>
-              Stock List
-            </Link>
-          </div>
+        <h3 className={styles.sectionTitle}>Low Stock Alerts</h3>
+        <div className={styles.actions}>
+          <Link href="/addstocks" className={styles.register}>Add Stocks</Link>
+          <Link href="/stocklist" className={styles.register}>Stock List</Link>
         </div>
-
         <table className={styles.table}>
           <thead>
             <tr>
@@ -99,15 +104,19 @@ export default function DashboardHome() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td
-                className={styles.td}
-                colSpan="2"
-                style={{ textAlign: "center", color: "#999" }}
-              >
-                No data to display. Connect to inventory database.
-              </td>
-            </tr>
+            {stocks.filter(item => item.quantity <= 10).map((item, index) => (
+              <tr key={index}>
+                <td className={styles.td}>{item.name}</td>
+                <td className={styles.td}>{item.quantity}</td>
+              </tr>
+            ))}
+            {stocks.filter(item => item.quantity <= 10).length === 0 && (
+              <tr>
+                <td className={styles.td} colSpan="2" style={{ textAlign: "center", color: "#999" }}>
+                  No low stock items.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </section>
@@ -124,20 +133,25 @@ export default function DashboardHome() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td
-                className={styles.td}
-                colSpan="3"
-                style={{ textAlign: "center", color: "#999" }}
-              >
-                No data to display. Connect to inventory database.
-              </td>
-            </tr>
+            {stocks.slice(-5).map((item, index) => (
+              <tr key={index}>
+                <td className={styles.td}>{item.name}</td>
+                <td className={styles.td}>{item.quantity}</td>
+                <td className={styles.td}>${item.price.toFixed(2)}</td>
+              </tr>
+            ))}
+            {stocks.length === 0 && (
+              <tr>
+                <td className={styles.td} colSpan="3" style={{ textAlign: "center", color: "#999" }}>
+                  No recently added items.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </section>
 
-      {/* Inventory Features as Cards */}
+      {/* Inventory Features */}
       <main className={styles.main}>
         <h2 className={styles.sectionTitle}>Inventory Features</h2>
         <div className={styles.cardContainer}>
