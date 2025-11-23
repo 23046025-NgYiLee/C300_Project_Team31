@@ -79,6 +79,10 @@ export default function DashboardHome() {
       <header className={styles.header}>
         <Link href="/UserRegister" className={styles.register}>Send register forms</Link>
         <h1 className={styles.heading}>Admin Dashboard</h1>
+         <div className={styles.actions}>
+          <Link href="/addstocks" className={styles.register}>Add Stocks</Link>
+          <Link href="/stocklist" className={styles.register}>Stock List</Link>
+        </div>
       </header>
 
       {/* Inventory Summary */}
@@ -92,10 +96,7 @@ export default function DashboardHome() {
       {/* Low Stock Alerts */}
       <section className={styles.lowStock}>
         <h3 className={styles.sectionTitle}>Low Stock Alerts</h3>
-        <div className={styles.actions}>
-          <Link href="/addstocks" className={styles.register}>Add Stocks</Link>
-          <Link href="/stocklist" className={styles.register}>Stock List</Link>
-        </div>
+        
         <table className={styles.table}>
           <thead>
             <tr>

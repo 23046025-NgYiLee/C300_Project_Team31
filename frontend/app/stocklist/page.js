@@ -79,7 +79,7 @@ export default function StockListPage() {
                         </div>
                         <div className={styles.stockBtnBar}>
                             <div class="d-flex justify-content-between">
-                                <a  href="/editstock"  className={styles.stockBtn}>See flower detail</a>
+                                <a  href="/editstock"  className={styles.stockBtn}>Edit  detail</a>
                             </div>
                             
                             <div class="d-flex justify-content-between">

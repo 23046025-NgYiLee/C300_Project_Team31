@@ -1,7 +1,12 @@
 'use client'
 import { useRef, useState } from 'react'
 import emailjs from '@emailjs/browser'
-// Only import '../generalstyle.css' ONCE, preferably in /app/layout.js
+
+
+import Navbar from "../partials/navbar";
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -48,61 +53,67 @@ export default function Register() {
   }
 
   return (
-    <div className="page">
-      <main className="main">
-        <div className="intro">
-          <h1>Create an Account for Workers</h1>
-        </div>
-
-        {/* Alerts */}
-        {errors.length > 0 && (
-          <div style={{ color: 'red', marginBottom: '16px' }}>
-            {errors.map((error, i) => <p key={i}>{error}</p>)}
-          </div>
-        )}
-        {messages.length > 0 && (
-          <div style={{ color: 'green', marginBottom: '16px' }}>
-            {messages.map((msg, i) => <p key={i}>{msg}</p>)}
-          </div>
-        )}
-
-        {/* Registration Form */}
-        <form ref={form} onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '440px' }}>
-          <div style={{ marginBottom: '16px' }}>
-            <label>Email:</label>
-            <input
-              type="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '8px',
-                border: '1px solid #ccc',
-                marginTop: '6px',
-              }}
-            />
+    <>
+      <Navbar />
+    
+      <div className="page">
+        <main className="main">
+          <div className="intro">
+            <h1>Create an Account for Workers</h1>
           </div>
 
-          {/* Hidden input for generated password */}
-          <input type="hidden" name="password" />
+          {/* Alerts */}
+          {errors.length > 0 && (
+            <div style={{ color: 'red', marginBottom: '16px' }}>
+              {errors.map((error, i) => <p key={i}>{error}</p>)}
+            </div>
+          )}
+          {messages.length > 0 && (
+            <div style={{ color: 'green', marginBottom: '16px' }}>
+              {messages.map((msg, i) => <p key={i}>{msg}</p>)}
+            </div>
+          )}
 
-          <div className="ctas">
-            <button
-              type="submit"
-              className="primary ctaButton"
-            >
-              Register
-            </button>
+          {/* Registration Form */}
+          <form ref={form} onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '440px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <label>Email:</label>
+              <input
+                type="email"
+                name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: '1px solid #ccc',
+                  marginTop: '6px',
+                }}
+              />
+            </div>
 
-            <a href="/AdminDashboard" className="secondary">
-              Back to Dashboard
-            </a>
-          </div>
-        </form>
-      </main>
-    </div>
+            {/* Hidden input for generated password */}
+            <input type="hidden" name="password" />
+
+            <div className="ctas">
+              <button
+                type="submit"
+                className="primary ctaButton"
+              >
+                Register
+              </button>
+
+              <a href="/AdminDashboard" className="secondary">
+                Back to Dashboard
+              </a>
+            </div>
+          </form>
+        </main>
+      </div>
+    
+    </>
+    
   )
 }
