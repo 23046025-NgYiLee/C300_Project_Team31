@@ -105,9 +105,6 @@ export default function LoginPage() {
             <a href="/forgot-password" className="secondary">
               Forgot Password?
             </a>
-            <a href="/register" className="secondary">
-              Register Account
-            </a>
           </div>
         </form>
       </main>

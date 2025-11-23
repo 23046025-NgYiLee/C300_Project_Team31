@@ -8,7 +8,8 @@ export default function DashboardHome() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const loggedUser = JSON.parse(localStorage.getItem("user")) || { name: "Admin" };
+    const loggedUser =
+      JSON.parse(localStorage.getItem("user")) || { name: "Admin" };
     setUser(loggedUser);
   }, []);
 
@@ -22,12 +23,30 @@ export default function DashboardHome() {
 
   // Feature Cards
   const features = [
-    { title: "Inbound Production Tracking", desc: "Input production numbers for incoming stock." },
-    { title: "Outbound Production Tracking", desc: "Track outbound production numbers efficiently." },
-    { title: "Stock Movement Monitoring", desc: "Track movement transactions for traceability." },
-    { title: "Stock Taking Capabilities", desc: "Accurate inventory counting in real-time." },
-    { title: "Comprehensive Reporting Tools", desc: "Detailed analytics to support decision making." },
-    { title: "Supervisor Access Features", desc: "Ensure oversight and accuracy in stock management." }
+    {
+      title: "Inbound Production Tracking",
+      desc: "Input production numbers for incoming stock.",
+    },
+    {
+      title: "Outbound Production Tracking",
+      desc: "Track outbound production numbers efficiently.",
+    },
+    {
+      title: "Stock Movement Monitoring",
+      desc: "Track movement transactions for traceability.",
+    },
+    {
+      title: "Stock Taking Capabilities",
+      desc: "Accurate inventory counting in real-time.",
+    },
+    {
+      title: "Comprehensive Reporting Tools",
+      desc: "Detailed analytics to support decision making.",
+    },
+    {
+      title: "Supervisor Access Features",
+      desc: "Ensure oversight and accuracy in stock management.",
+    },
   ];
 
   return (
@@ -48,7 +67,6 @@ export default function DashboardHome() {
           Send register forms
         </Link>
         <h1 className={styles.heading}>Admin Dashboard</h1>
-       
       </header>
 
       {/* Inventory Summary and Placeholders */}
@@ -59,14 +77,20 @@ export default function DashboardHome() {
         </div>
       </section>
 
+      {/* Low Stock Section with Actions in Header */}
       <section className={styles.lowStock}>
-        <h3 className={styles.sectionTitle}>Low Stock Alerts</h3>
-          <Link href="/addstocks" className={styles.register}>
-            Add Stocks
-          </Link>
-           <Link href="/stocklist" className={styles.register}>
-            stock list
-          </Link>
+        <div className={styles.sectionHeader}>
+          <h3 className={styles.sectionTitle}>Low Stock Alerts</h3>
+          <div className={styles.actions}>
+            <Link href="/addstocks" className={styles.register}>
+              Add Stocks
+            </Link>
+            <Link href="/stocklist" className={styles.register}>
+              Stock List
+            </Link>
+          </div>
+        </div>
+
         <table className={styles.table}>
           <thead>
             <tr>
@@ -76,13 +100,19 @@ export default function DashboardHome() {
           </thead>
           <tbody>
             <tr>
-              <td className={styles.td} colSpan="2" style={{ textAlign: "center", color: "#999" }}>
+              <td
+                className={styles.td}
+                colSpan="2"
+                style={{ textAlign: "center", color: "#999" }}
+              >
                 No data to display. Connect to inventory database.
               </td>
             </tr>
           </tbody>
         </table>
       </section>
+
+      {/* Recently Added Items */}
       <section className={styles.recent}>
         <h3 className={styles.sectionTitle}>Recently Added Items</h3>
         <table className={styles.table}>
@@ -95,7 +125,11 @@ export default function DashboardHome() {
           </thead>
           <tbody>
             <tr>
-              <td className={styles.td} colSpan="3" style={{ textAlign: "center", color: "#999" }}>
+              <td
+                className={styles.td}
+                colSpan="3"
+                style={{ textAlign: "center", color: "#999" }}
+              >
                 No data to display. Connect to inventory database.
               </td>
             </tr>
