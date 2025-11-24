@@ -22,19 +22,13 @@ export default function DashboardHome() {
   const [stocks, setStocks] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Load stock data from backend
-  useEffect(() => {
-  async function loadStocks() {
-    try {
-      const res = await fetch("http://localhost:4000/stocklist");
-      const data = await res.json();
-      setStocks(data);
-    } catch (err) {
-      console.error("Error loading stocks:", err);
-    }
-  }
-  loadStocks();
-}, []);
+  // Load Inventory data from backend
+    useEffect(() => {
+      fetch('http://localhost:4000/api/stocks') // Point to your Express backend
+        .then(res => res.json())
+        .then(data => setStocks(data))
+        .catch(() => setStocks([]));
+    }, []);
 
 
   // Inventory Feature Cards
@@ -44,7 +38,7 @@ export default function DashboardHome() {
       desc: "Input production numbers for incoming stock.",
     },
     {
-      title: "Outbound Production Tracking",
+      title: "Outbound Production Tracking",  
       desc: "Track outbound production numbers efficiently.",
     },
     {
@@ -107,8 +101,8 @@ export default function DashboardHome() {
           <tbody>
             {stocks.filter(item => item.quantity <= 10).map((item, index) => (
               <tr key={index}>
-                <td className={styles.td}>{item.name}</td>
-                <td className={styles.td}>{item.quantity}</td>
+                <td className={styles.td}>{item.ItemName}</td>
+                <td className={styles.td}>{item.Quantity}</td>
               </tr>
             ))}
             {stocks.filter(item => item.quantity <= 10).length === 0 && (
@@ -136,9 +130,9 @@ export default function DashboardHome() {
           <tbody>
             {stocks.slice(-5).map((item, index) => (
               <tr key={index}>
-                <td className={styles.td}>{item.name}</td>
-                <td className={styles.td}>{item.quantity}</td>
-                <td className={styles.td}>${item.price.toFixed(2)}</td>
+                <td className={styles.td}>{item.ItemName}</td>
+                <td className={styles.td}>{item.Quantity}</td>
+                <td className={styles.td}>${Number(item.UnitPrice).toFixed(2)}</td>
               </tr>
             ))}
             {stocks.length === 0 && (

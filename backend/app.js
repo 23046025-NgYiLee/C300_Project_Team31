@@ -46,8 +46,9 @@ connection.connect((err) => {
 });
 
 app.get('/', (req, res) => {
-  res.render('index');
+  res.send('API Server is running');
 });
+
 
 // --------- User Registration ---------
 app.post('/register', async (req, res) => {
@@ -94,7 +95,7 @@ app.post('/login', (req, res) => {
       const isMatch = await bcrypt.compare(password, admin.password);
       if (isMatch) return res.json({ message: 'Login successful', userId: admin.user_id, email: admin.email, role: 'admin' });
     }
-    // Check staff/user
+    // Check staff
     connection.query('SELECT * FROM user WHERE email = ?', [email], async (err2, staffResults) => {
       if (err2) return res.status(500).json({ error: 'Database error', details: err2.message });
       if (staffResults && staffResults.length > 0) {
@@ -134,7 +135,7 @@ app.post("/forgot-password", (req, res) => {
 
     // Generate secure random token
     const token = crypto.randomBytes(32).toString("hex");
-    const expireTime = new Date(Date.now() + 3600000); // valid for 1 hour
+    const expireTime = new Date(Date.now() + 3600000); 
 
     // Store token in DB
     db.query(
@@ -169,7 +170,7 @@ app.post("/forgot-password", (req, res) => {
   });
 });
 
-// ✅ Step 2: Handle password reset submission
+// Handle password reset submission
 app.post("/reset-password/:token", (req, res) => {
   const { token } = req.params;
   const { newPassword } = req.body;
@@ -199,140 +200,34 @@ app.post("/reset-password/:token", (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-// List all flowers
-app.get('/List', (req, res) => {
-  const sql = 'SELECT * FROM flowers';
-  pool.query(sql, (err, results) => {
-    if (err) return res.status(500).send('Error retrieving products');
-    res.render('List', { flowers: results });
+app.get('/api/stocks', (req, res) => {
+  const sql = 'SELECT * FROM Inventory';
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching stocks:", err);
+      return res.status(500).json({ error: "Failed to fetch stocks" });
+    }
+    res.json(results);
   });
 });
 
-// Cart page
-app.get('/cart', (req, res) => {
-  const sql = 'SELECT * FROM cart';
-  pool.query(sql, (err, results) => {
-    if (err) return res.status(500).send('Error retrieving cart');
-    res.render('cart', { cart: results });
+
+app.delete('/api/stocks/:id', (req, res) => {
+  const itemId = req.params.id;
+  const sql = 'DELETE FROM Inventory WHERE ItemID = ?';
+  connection.query(sql, [itemId], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to delete item' });
+    res.json({ message: 'Item deleted' });
   });
 });
 
-// Add flower page
-app.get('/addflower', (req, res) => {
-  res.render('addflower');
-});
 
-// Add flower POST
-app.post('/addflower', upload.single('image'), (req, res) => {
-  const { name, quantity, price } = req.body;
-  const image = req.file ? req.file.filename : null;
-  const sql = 'INSERT INTO flowers (name, quantity, price, image) VALUES (?, ?, ?, ?)';
-  pool.query(sql, [name, quantity, price, image], (err) => {
-    if (err) return res.status(500).send('Error adding flower');
-    res.redirect('/List');
-  });
-});
 
-// Edit flower page
-app.get('/editflower/:id', (req, res) => {
-  const sql = 'SELECT * FROM flowers WHERE Flowerid = ?';
-  pool.query(sql, [req.params.id], (err, results) => {
-    if (err) return res.status(500).send('Error retrieving flower');
-    if (results.length === 0) return res.status(404).send('Flower not found');
-    res.render('editflower', { flower: results[0] });
-  });
-});
 
-// Edit flower POST
-app.post('/editflower/:id', upload.single('image'), (req, res) => {
-  const { name, quantity, price } = req.body;
-  let image = req.body.currentImage || null;
-  if (req.file) image = req.file.filename;
 
-  const sql = 'UPDATE flowers SET name = ?, quantity = ?, price = ?, image = ? WHERE Flowerid = ?';
-  pool.query(sql, [name, quantity, price, image, req.params.id], (err) => {
-    if (err) return res.status(500).send('Error updating flower');
-    res.redirect('/List');
-  });
-});
 
-// Delete flower
-app.get('/deleteFlower/:id', (req, res) => {
-  const sql = 'DELETE FROM flowers WHERE Flowerid = ?';
-  pool.query(sql, [req.params.id], (err) => {
-    if (err) return res.status(500).send('Error deleting flower');
-    res.redirect('/List');
-  });
-});
 
-// Delete flower from cart
-app.get('/deleteFlowercart/:id', (req, res) => {
-  const sql = 'DELETE FROM cart WHERE Cartid = ?';
-  pool.query(sql, [req.params.id], (err) => {
-    if (err) return res.status(500).send('Error deleting cart item');
-    res.redirect('/cart');
-  });
-});
 
-// Flower detail page
-app.get('/detail/:id', (req, res) => {
-  const sql = 'SELECT * FROM flowers WHERE Flowerid = ?';
-  pool.query(sql, [req.params.id], (err, results) => {
-    if (err) return res.status(500).send('Error retrieving flower');
-    if (results.length === 0) return res.status(404).send('Flower not found');
-    res.render('detail', { Flower: results[0] });
-  });
-});
-
-// Add flower to cart
-app.post(['/detail/:id/addtocart', '/List/:id/addtocart'], (req, res) => {
-  const Flowerid = req.params.id;
-  const { quantity } = req.body;
-
-  const selectSql = 'SELECT name, price, image, quantity as stock FROM flowers WHERE Flowerid = ?';
-  pool.query(selectSql, [Flowerid], (err, results) => {
-    if (err) return res.status(500).send('Error retrieving flower');
-    if (results.length === 0) return res.status(404).send('Flower not found');
-
-    const { name, image, price, stock } = results[0];
-    const qty = quantity ? parseInt(quantity) : stock; // use provided quantity or stock
-
-    const insertSql = 'INSERT INTO cart (name, image, price, quantity) VALUES (?, ?, ?, ?)';
-    pool.query(insertSql, [name, image, price, qty], (err) => {
-      if (err) return res.status(500).send('Error adding to cart');
-      res.redirect('/cart'); // redirect to cart
-    });
-  });
-});
-
-// Search flower by name
-app.get('/search', (req, res) => {
-  const { search } = req.query;
-  const sql = 'SELECT * FROM flowers WHERE name LIKE ? COLLATE utf8mb4_general_ci';
-  pool.query(sql, [`%${search}%`], (err, results) => {
-    if (err) return res.status(500).send('Error searching for flowers');
-    if (results.length > 0) res.redirect(`/detail/${results[0].Flowerid}`);
-    else res.send('No flower found with that name');
-  });
-});
-
-app.get('/stocks', (req, res) => {
-    pool.query("SELECT * FROM stocks", (err, results) => {
-        if (err) {
-            console.error("Error fetching stocks:", err);
-            return res.status(500).json({ error: "Failed to fetch stocks" });
-        }
-        res.json(results);
-    });
-});
 
 // Start server
 app.listen(port, () => {
