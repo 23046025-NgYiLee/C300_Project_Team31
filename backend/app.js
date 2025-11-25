@@ -20,32 +20,32 @@ app.use(express.static('public'))
 
 
 app.use(express.static('public'));
-const storage= multer.diskStorage({
-    destination: (req, file, cb)=> {
-        cb(null,'public/images');
-    },
-    filename:(req,file, cb)=>{
-        cb(null,file.originalname);
-    }
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/images');
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
 })
-const upload= multer({storage:storage});
+const upload = multer({ storage: storage });
 
 //create a database
 // Create MySQL connection
 const connection = mysql.createConnection({
-    host: '8p0w1d.h.filess.io',
-    user: 'inventory_management_thinkclay',
-    password: '39804ddb7407e460450cfae23f25551de56c0c6e',
-    database: 'inventory_management_thinkclay',
-    port: 61002
+  host: '8p0w1d.h.filess.io',
+  user: 'inventory_management_thinkclay',
+  password: '39804ddb7407e460450cfae23f25551de56c0c6e',
+  database: 'inventory_management_thinkclay',
+  port: 61002
 });
 
 connection.connect((err) => {
-    if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
-    }
-    console.log('Connected to MySQL database');
+  if (err) {
+    console.error('Error connecting to MySQL:', err);
+    return;
+  }
+  console.log('Connected to MySQL database');
 });
 
 app.get('/', (req, res) => {
@@ -106,7 +106,7 @@ app.post('/login', (req, res) => {
 
       // Compare password using bcrypt
       const isMatch = await bcrypt.compare(password, user.password);
- 
+
       if (!isMatch) {
         return res.status(401).json({ error: 'Invalid email or password' });
       }
@@ -119,7 +119,7 @@ app.post('/login', (req, res) => {
         role = 'staff';
       }
 
-  
+
       return res.json({
         message: 'Login successful',
         userId: user.user_id || user.id,
@@ -132,18 +132,18 @@ app.post('/login', (req, res) => {
 
 
 //app.post('/login', (req, res) => {
-  //const { email, password } = req.body;
-  //if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+//const { email, password } = req.body;
+//if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
 
-  //connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
-    //if (err) return res.status(500).json({ error: 'Database error', details: err.message });
-    //if (results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
+//connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
+//if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+//if (results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
 
-    //const user = results[0];
-    //const isMatch = await bcrypt.compare(password, user.password);
-    //if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
+//const user = results[0];
+//const isMatch = await bcrypt.compare(password, user.password);
+//if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
 
-  //  res.json({ message: 'Login successful', userId: user.id, email: user.email });
+//  res.json({ message: 'Login successful', userId: user.id, email: user.email });
 //  });
 //});
 
@@ -157,7 +157,7 @@ app.post("/forgot-password", (req, res) => {
 
     // Generate secure random token
     const token = crypto.randomBytes(32).toString("hex");
-    const expireTime = new Date(Date.now() + 3600000); 
+    const expireTime = new Date(Date.now() + 3600000);
 
     // Store token in DB
     db.query(
@@ -222,14 +222,93 @@ app.post("/reset-password/:token", (req, res) => {
 
 
 
+// Get all stocks with optional search and filter parameters
 app.get('/api/stocks', (req, res) => {
-  const sql = 'SELECT * FROM Inventory';
-  connection.query(sql, (err, results) => {
+  const { search, brand, class: itemClass, type, minQty, maxQty } = req.query;
+
+  let sql = 'SELECT * FROM Inventory WHERE 1=1';
+  const params = [];
+
+  // Search filter - searches across name, brand, class, and type
+  if (search) {
+    sql += ' AND (ItemName LIKE ? OR Brand LIKE ? OR ItemClass LIKE ? OR ItemType LIKE ?)';
+    const searchPattern = `%${search}%`;
+    params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+  }
+
+  // Brand filter
+  if (brand) {
+    sql += ' AND Brand = ?';
+    params.push(brand);
+  }
+
+  // Class filter
+  if (itemClass) {
+    sql += ' AND ItemClass = ?';
+    params.push(itemClass);
+  }
+
+  // Type filter
+  if (type) {
+    sql += ' AND ItemType = ?';
+    params.push(type);
+  }
+
+  // Minimum quantity filter
+  if (minQty) {
+    sql += ' AND Quantity >= ?';
+    params.push(parseInt(minQty));
+  }
+
+  // Maximum quantity filter
+  if (maxQty) {
+    sql += ' AND Quantity <= ?';
+    params.push(parseInt(maxQty));
+  }
+
+  sql += ' ORDER BY ItemName ASC';
+
+  connection.query(sql, params, (err, results) => {
     if (err) {
       console.error("Error fetching stocks:", err);
       return res.status(500).json({ error: "Failed to fetch stocks" });
     }
     res.json(results);
+  });
+});
+
+// Get unique filter values for dropdowns
+app.get('/api/stocks/filters/values', (req, res) => {
+  const queries = {
+    brands: 'SELECT DISTINCT Brand FROM Inventory WHERE Brand IS NOT NULL AND Brand != "" ORDER BY Brand ASC',
+    classes: 'SELECT DISTINCT ItemClass FROM Inventory WHERE ItemClass IS NOT NULL AND ItemClass != "" ORDER BY ItemClass ASC',
+    types: 'SELECT DISTINCT ItemType FROM Inventory WHERE ItemType IS NOT NULL AND ItemType != "" ORDER BY ItemType ASC'
+  };
+
+  const results = {};
+  let completed = 0;
+
+  Object.keys(queries).forEach(key => {
+    connection.query(queries[key], (err, data) => {
+      if (err) {
+        console.error(`Error fetching ${key}:`, err);
+        return res.status(500).json({ error: `Failed to fetch ${key}` });
+      }
+
+      // Extract values from result objects
+      if (key === 'brands') {
+        results.brands = data.map(row => row.Brand);
+      } else if (key === 'classes') {
+        results.classes = data.map(row => row.ItemClass);
+      } else if (key === 'types') {
+        results.types = data.map(row => row.ItemType);
+      }
+
+      completed++;
+      if (completed === Object.keys(queries).length) {
+        res.json(results);
+      }
+    });
   });
 });
 
@@ -249,10 +328,10 @@ app.post('/api/stocks', (req, res) => {
 
   const sql = 'INSERT INTO Inventory (ItemName, Quantity, Brand, ItemClass, ItemType, ItemCategory, Supplier, UnitPrice, DateAdded, LastUpdated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
-  connection.query(sql, [name, quantity, brand,  ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated], (err, result) => {
+  connection.query(sql, [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated], (err, result) => {
 
     if (err) return res.status(500).json({ error: 'Error adding stock', details: err.message });
-    
+
     res.status(201).json({ message: 'Stock added', id: result.insertId });
   });
 });
@@ -260,14 +339,14 @@ app.post('/api/stocks', (req, res) => {
 
 app.post('/api/user', (req, res) => {
 
-  const {  name, email ,password , is_staff, is_supervisor } = req.body;
+  const { name, email, password, is_staff, is_supervisor } = req.body;
 
   const sql = 'INSERT INTO user (name, email ,password , is_staff, is_supervisor) VALUES (?, ?, ?, ?, ?,  )';
 
-  connection.query(sql, [name, email ,password , is_staff, is_supervisor], (err, result) => {
+  connection.query(sql, [name, email, password, is_staff, is_supervisor], (err, result) => {
 
     if (err) return res.status(500).json({ error: 'Error adding staff', details: err.message });
-    
+
     res.status(201).json({ message: 'staff added', id: result.insertId });
   });
 });

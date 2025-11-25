@@ -34,6 +34,52 @@
   margin: 0 auto 32px auto;
 }
 
+/* Search Section */
+.searchSection {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto 24px auto;
+}
+
+/* Filter Section */
+.filterSection {
+  width: 100%;
+  margin: 0 auto 32px auto;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filterItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterItem label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a4e69;
+  margin-bottom: 0;
+}
+
+.resultsCount {
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding-top: 12px;
+  border-top: 1px solid #dee2e6;
+}
+
 .cardGrid {
   display: flex;
   flex-wrap: wrap;
