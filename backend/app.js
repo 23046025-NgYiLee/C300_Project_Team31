@@ -3,6 +3,9 @@ const mysql = require('mysql2');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 bcrypt.hash('thispassword', 10).then(console.log);
+
+bcrypt.hash('Staff123!', 10).then(console.loga);
+
 const path = require('path');
 const cors = require('cors');
 
@@ -84,30 +87,49 @@ app.post('/register', async (req, res) => {
 // --------- User Login ---------
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
 
-  // Check admin (user table)
-  connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, adminResults) => {
-    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
-    if (adminResults && adminResults.length > 0) {
-      const admin = adminResults[0];
-      // Assumes password is hashed using bcrypt!
-      const isMatch = await bcrypt.compare(password, admin.password);
-      if (isMatch) return res.json({ message: 'Login successful', userId: admin.user_id, email: admin.email, role: 'admin' });
-    }
-    // Check staff
-    connection.query('SELECT * FROM user WHERE email = ?', [email], async (err2, staffResults) => {
-      if (err2) return res.status(500).json({ error: 'Database error', details: err2.message });
-      if (staffResults && staffResults.length > 0) {
-        const staff = staffResults[0];
-        const isMatch = await bcrypt.compare(password, staff.password);
-        if (isMatch) return res.json({ message: 'Login successful', userId: staff.id, email: staff.email, role: 'staff' });
+  connection.query(
+    'SELECT * FROM user WHERE email = ?',
+    [email],
+    async (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error', details: err.message });
       }
-      // Not found/invalid
-      return res.status(401).json({ error: 'Invalid email or password' });
-    });
-  });
+      if (!results || results.length === 0) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      const user = results[0];
+
+      // Compare password using bcrypt
+      const isMatch = await bcrypt.compare(password, user.password);
+ 
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+
+      let role = 'staff';
+      if (user.is_admin === 1 || user.is_admin === true) {
+        role = 'admin';
+      } else if (user.is_staff === 1 || user.is_staff === true) {
+        role = 'staff';
+      }
+
+  
+      return res.json({
+        message: 'Login successful',
+        userId: user.user_id || user.id,
+        email: user.email,
+        role
+      });
+    }
+  );
 });
+
 
 //app.post('/login', (req, res) => {
   //const { email, password } = req.body;
