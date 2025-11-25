@@ -16,10 +16,10 @@ export default function ForgotPasswordPage() {
 
     emailjs
       .sendForm(
-        "service_75pbn7g",      // Your EmailJS Service ID
-        "template_kneuvne",     // Your EmailJS Template ID
+        "service_75pbn7g",      //  EmailJS Service ID
+        "template_kneuvne",     //  EmailJS Template ID
         form.current,           // Reference to the form
-        "Wlqwf2LE5qFmZzMTR"     // Your Public Key
+        "Wlqwf2LE5qFmZzMTR"     //  Public Key
       )
       .then(
         (result) => {
@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
       <main className="main">
         <div className="intro">
           <h1>Forgot Password?</h1>
-          <p>Enter your email address below and we’ll send you a reset link.</p>
+          <p>Enter your email address below and we will send you a reset link.</p>
         </div>
 
         {message && (

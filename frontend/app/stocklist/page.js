@@ -65,6 +65,10 @@ export default function StockListPage() {
                                 fetch(`http://localhost:4000/api/stocks/${stock.ItemID}`, {
                                   method: 'DELETE'
                                   })
+                                    .then(res => res.json())
+                                    .then(() => {
+                                        setStocks(prevStocks => prevStocks.filter(s => s.ItemID !== stock.ItemID));
+                                    })
                               }
                             }}
                           >

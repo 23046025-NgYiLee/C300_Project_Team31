@@ -221,8 +221,19 @@ app.delete('/api/stocks/:id', (req, res) => {
   });
 });
 
+app.post('/api/stocks', (req, res) => {
 
+  const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated } = req.body;
 
+  const sql = 'INSERT INTO Inventory (ItemName, Quantity, Brand, ItemClass, ItemType, ItemCategory, Supplier, UnitPrice, DateAdded, LastUpdated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
+  connection.query(sql, [name, quantity, brand,  ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated], (err, result) => {
+
+    if (err) return res.status(500).json({ error: 'Error adding stock', details: err.message });
+    
+    res.status(201).json({ message: 'Stock added', id: result.insertId });
+  });
+});
 
 
 
