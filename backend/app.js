@@ -258,6 +258,22 @@ app.post('/api/stocks', (req, res) => {
 });
 
 
+app.post('/api/user', (req, res) => {
+
+  const {  name, email ,password , is_staff, is_supervisor } = req.body;
+
+  const sql = 'INSERT INTO user (name, email ,password , is_staff, is_supervisor) VALUES (?, ?, ?, ?, ?,  )';
+
+  connection.query(sql, [name, email ,password , is_staff, is_supervisor], (err, result) => {
+
+    if (err) return res.status(500).json({ error: 'Error adding staff', details: err.message });
+    
+    res.status(201).json({ message: 'staff added', id: result.insertId });
+  });
+});
+
+
+
 
 
 
