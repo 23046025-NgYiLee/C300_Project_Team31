@@ -341,7 +341,7 @@ app.post('/api/user', (req, res) => {
 
   const { name, email, password, is_staff, is_supervisor } = req.body;
 
-  const sql = 'INSERT INTO user (name, email ,password , is_staff, is_supervisor) VALUES (?, ?, ?, ?, ?,  )';
+  const sql = 'INSERT INTO user (name, email ,password , is_staff, is_supervisor) VALUES (?, ?, ?, ?, ?)';
 
   connection.query(sql, [name, email, password, is_staff, is_supervisor], (err, result) => {
 
