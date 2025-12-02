@@ -41,7 +41,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   // Group stocks by category or brand for warehouse-style display
