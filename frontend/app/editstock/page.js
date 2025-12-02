@@ -1,22 +1,18 @@
-
+"use client";
 import Navbar from "../partials/navbar";
-<head>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-</head>
 
-
-export default function AddStocksPage({ flower }) {
+export default function EditStockPage({ flower }) {
   return (
     <>
       <Navbar />
       <div className="page">
         <main className="main">
           <div className="intro">
-            <h2 style={{ fontSize: "3rem" , color: "#4e5dbdff"}}>Edit  Stocks</h2>
+            <h2 style={{ fontSize: "3rem", color: "#4e5dbdff" }}>Edit Stocks</h2>
           </div>
           <div>
             {flower ? (
-              <form action={`/editf   ower/${flower.Flowerid}`} method="POST" encType="multipart/form-data" style={{ width: "100%", maxWidth: "440px" }}>
+              <form action={`/editflower/${flower.Flowerid}`} method="POST" encType="multipart/form-data" style={{ width: "100%", maxWidth: "440px" }}>
                 <div style={{ marginBottom: '16px' }}>
                   <label htmlFor="name">Stock Name:</label>
                   <input type="text" id="name" name="name" required />
@@ -51,18 +47,16 @@ export default function AddStocksPage({ flower }) {
                 </div>
                 <div className="ctas">
                   <button type="submit" className="primary ctaButton">
-                    Add Stock
+                    Update Stock
                   </button>
                 </div>
               </form>
             ) : (
-              <p style={{ fontSize: "1rem" , color: "#4e5dbdff"}}>No flower found.</p>
+              <p style={{ fontSize: "1rem", color: "#4e5dbdff" }}>No item found.</p>
             )}
           </div>
         </main>
       </div>
-    
     </>
-    
   );
 }

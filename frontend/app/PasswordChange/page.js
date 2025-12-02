@@ -59,9 +59,9 @@ export default function PasswordChange() {
   }
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <div className={styles.intro}>
+    <div className="page">
+      <main className="main">
+        <div className="intro">
           <h1>Reset Your Password</h1>
           <p>Enter your email and a new password to update your account.</p>
         </div>
@@ -134,8 +134,8 @@ export default function PasswordChange() {
             />
           </div>
 
-          <div className={styles.ctas}>
-            <button type="submit" className={`${styles.primary} ${styles.ctaButton}`}>
+          <div className="ctas">
+            <button type="submit" className="primary ctaButton">
               Change Password
             </button>
           </div>
