@@ -99,7 +99,7 @@ export default function AdminDashboard() {
           </nav>
         </aside>
 
-        {/* Main Content */}
+        {/* Main Content s */}
         <main className={styles.mainContent}>
           {/* Page Header */}
           <div className={styles.pageHeader}>
