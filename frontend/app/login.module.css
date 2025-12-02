@@ -1,0 +1,367 @@
+/* Modern Login Page */
+.loginPage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Left Side - Branding */
+.brandSide {
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+.brandSide::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.brandContent {
+    position: relative;
+    z-index: 1;
+    max-width: 500px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.logoIcon {
+    font-size: 3rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.brandTitle {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.brandSubtitle {
+    font-size: 1.25rem;
+    margin-bottom: 48px;
+    opacity: 0.95;
+    font-weight: 300;
+}
+
+.features {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 1.1rem;
+    padding: 12px 0;
+}
+
+.featureIcon {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* Right Side - Form */
+.formSide {
+    background: #f5f6fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.formContainer {
+    background: white;
+    padding: 48px;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 450px;
+}
+
+.formHeader {
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.formHeader h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 8px 0;
+}
+
+.formHeader p {
+    color: #78909c;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* Alerts */
+.errorAlert {
+    background: #ffebee;
+    color: #c62828;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    border-radius: 8px;
+    border-left: 4px solid #f44336;
+}
+
+.errorAlert p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.successAlert {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+}
+
+.successAlert p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Form */
+.loginForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.formGroup label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.formInput {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background: #fafafa;
+}
+
+.formInput:focus {
+    outline: none;
+    border-color: #4caf50;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.formInput:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.formOptions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+    gap: 20px;
+}
+
+.rememberMe {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: #546e7a;
+    cursor: pointer;
+    user-select: none;
+}
+
+.rememberMe input {
+    cursor: pointer;
+    margin: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.forgotLink {
+    color: #4caf50;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+    white-space: nowrap;
+}
+
+.forgotLink:hover {
+    color: #2e7d32;
+    text-decoration: underline;
+}
+
+.loginBtn {
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.loginBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+}
+
+.loginBtn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.loginBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Spinner */
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.formFooter {
+    margin-top: 24px;
+    text-align: center;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.formFooter p {
+    color: #78909c;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .loginPage {
+        grid-template-columns: 1fr;
+    }
+
+    .brandSide {
+        display: none;
+    }
+
+    .formSide {
+        padding: 20px;
+    }
+
+    .formContainer {
+        padding: 32px;
+    }
+}
+
+@media (max-width: 480px) {
+    .formContainer {
+        padding: 24px;
+    }
+
+    .formHeader h2 {
+        font-size: 1.5rem;
+    }
+
+    .loginBtn {
+        padding: 12px 20px;
+    }
+
+    .formOptions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+
+/* Mobile: Show compact branding */
+@media (max-width: 1024px) {
+    .formSide::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 120px;
+        background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+        z-index: 0;
+    }
+
+    .formSide {
+        position: relative;
+        padding-top: 80px;
+    }
+
+    .formContainer {
+        position: relative;
+        z-index: 1;
+    }
+
+    .formContainer::before {
+        content: '📦';
+        position: absolute;
+        top: -60px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 3rem;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+}

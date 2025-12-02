@@ -3,14 +3,40 @@ import React, { useState, useEffect } from "react";
 import styles from "./dashboard.module.css";
 import Link from "next/link";
 
-export default function DashboardHome() {
-  // User Greeting & Logout
+export default function AdminDashboard() {
   const [user, setUser] = useState(null);
+  const [stocks, setStocks] = useState([]);
+  const [stats, setStats] = useState({
+    totalItems: 0,
+    lowStock: 0,
+    totalValue: 0,
+    recentlyAdded: 0
+  });
 
   useEffect(() => {
-    const loggedUser =
-      JSON.parse(localStorage.getItem("user")) || { name: "Admin" };
+    const loggedUser = JSON.parse(localStorage.getItem("user")) || { name: "Admin" };
     setUser(loggedUser);
+  }, []);
+
+  useEffect(() => {
+    fetch('http://localhost:4000/api/stocks')
+      .then(res => res.json())
+      .then(data => {
+        setStocks(data);
+        // Calculate statistics
+        const totalItems = data.reduce((sum, item) => sum + (item.Quantity || 0), 0);
+        const lowStock = data.filter(item => item.Quantity <= 10).length;
+        const totalValue = data.reduce((sum, item) => sum + ((item.Quantity || 0) * (item.UnitPrice || 0)), 0);
+        const recentlyAdded = data.slice(-7).length;
+
+        setStats({
+          totalItems,
+          lowStock,
+          totalValue,
+          recentlyAdded
+        });
+      })
+      .catch(() => setStocks([]));
   }, []);
 
   const handleLogout = () => {
@@ -18,146 +44,234 @@ export default function DashboardHome() {
     window.location.href = "/login";
   };
 
-  // Inventory Data
-  const [stocks, setStocks] = useState([]);
-  const [totalItems, setTotalItems] = useState(0);
-
-  // Load Inventory data from backend
-    useEffect(() => {
-      fetch('http://localhost:4000/api/stocks') // Point to your Express backend
-        .then(res => res.json())
-        .then(data => setStocks(data))
-        .catch(() => setStocks([]));
-    }, []);
-
-
-  // Inventory Feature Cards
-  const features = [
-    {
-      title: "Inbound Production Tracking",
-      desc: "Input production numbers for incoming stock.",
-    },
-    {
-      title: "Outbound Production Tracking",  
-      desc: "Track outbound production numbers efficiently.",
-    },
-    {
-      title: "Stock Movement Monitoring",
-      desc: "Track movement transactions for traceability.",
-    },
-    {
-      title: "Stock Taking Capabilities",
-      desc: "Accurate inventory counting in real-time.",
-    },
-    {
-      title: "Comprehensive Reporting Tools",
-      desc: "Detailed analytics to support decision making.",
-    },
-    {
-      title: "Supervisor Access Features",
-      desc: "Ensure oversight and accuracy in stock management.",
-    },
-  ];
+  // Group stocks by category or brand for warehouse-style display
+  const groupedStocks = stocks.reduce((acc, stock) => {
+    const category = stock.ItemCategory || 'Uncategorized';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(stock);
+    return acc;
+  }, {});
 
   return (
-    <div className={styles.page}>
-      {/* User Greeting & Logout */}
-      {user && (
-        <div className={styles.userSection}>
-          <span className={styles.userWelcome}>Welcome, {user.name}</span>
-          <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
+    <div className={styles.dashboardPage}>
+      {/* Top Navigation Bar */}
+      <div className={styles.topBar}>
+        <div className={styles.brandSection}>
+          <h1 className={styles.brandName}>Inventory Pro</h1>
         </div>
-      )}
-
-      {/* Admin Header */}
-      <header className={styles.header}>
-        <Link href="/UserRegister" className={styles.register}>Send register forms</Link>
-        <h1 className={styles.heading}>Admin Dashboard</h1>
-         <div className={styles.actions}>
-          <Link href="/addstocks" className={styles.register}>Add Stocks</Link>
-          <Link href="/stocklist" className={styles.register}>Stock List</Link>
+        <div className={styles.searchBar}>
+          <input
+            type="text"
+            placeholder="Search by project or item..."
+            className={styles.searchInput}
+          />
         </div>
-      </header>
+        {user && (
+          <div className={styles.userSection}>
+            <span className={styles.userName}>{user.name}</span>
+            <button onClick={handleLogout} className={styles.logoutBtn}>Logout</button>
+          </div>
+        )}
+      </div>
 
-      {/* Inventory Summary */}
-      <section className={styles.summary}>
-        <div className={styles.card}>
-          <span className={styles.cardLabel}>Total Inventory</span>
-          <span className={styles.cardValue}>{totalItems}</span>
-        </div>
-      </section>
-
-      {/* Low Stock Alerts */}
-      <section className={styles.lowStock}>
-        <h3 className={styles.sectionTitle}>Low Stock Alerts</h3>
-        
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.th}>Name</th>
-              <th className={styles.th}>Quantity</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stocks.filter(item => item.quantity <= 10).map((item, index) => (
-              <tr key={index}>
-                <td className={styles.td}>{item.ItemName}</td>
-                <td className={styles.td}>{item.Quantity}</td>
-              </tr>
-            ))}
-            {stocks.filter(item => item.quantity <= 10).length === 0 && (
-              <tr>
-                <td className={styles.td} colSpan="2" style={{ textAlign: "center", color: "#999" }}>
-                  No low stock items.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
-
-      {/* Recently Added Items */}
-      <section className={styles.recent}>
-        <h3 className={styles.sectionTitle}>Recently Added Items</h3>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.th}>Name</th>
-              <th className={styles.th}>Quantity</th>
-              <th className={styles.th}>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stocks.slice(-5).map((item, index) => (
-              <tr key={index}>
-                <td className={styles.td}>{item.ItemName}</td>
-                <td className={styles.td}>{item.Quantity}</td>
-                <td className={styles.td}>${Number(item.UnitPrice).toFixed(2)}</td>
-              </tr>
-            ))}
-            {stocks.length === 0 && (
-              <tr>
-                <td className={styles.td} colSpan="3" style={{ textAlign: "center", color: "#999" }}>
-                  No recently added items.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
-
-      {/* Inventory Features */}
-      <main className={styles.main}>
-        <h2 className={styles.sectionTitle}>Inventory Features</h2>
-        <div className={styles.cardContainer}>
-          {features.map((f, i) => (
-            <div key={i} className={styles.cardFeature}>
-              <h3 className={styles.featureTitle}>{f.title}</h3>
-              <p className={styles.featureDesc}>{f.desc}</p>
+      <div className={styles.mainLayout}>
+        {/* Sidebar */}
+        <aside className={styles.sidebar}>
+          <nav className={styles.sidebarNav}>
+            <Link href="/AdminDashboard" className={`${styles.navItem} ${styles.active}`}>
+              <span className={styles.navIcon}>📊</span>
+              Dashboard
+            </Link>
+            <Link href="/stocklist" className={styles.navItem}>
+              <span className={styles.navIcon}>📦</span>
+              Stock
+            </Link>
+            <Link href="/UserRegister" className={styles.navItem}>
+              <span className={styles.navIcon}>👥</span>
+              User Management
+            </Link>
+            <div className={styles.navItem}>
+              <span className={styles.navIcon}>📋</span>
+              Reports
             </div>
-          ))}
-        </div>
-      </main>
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className={styles.mainContent}>
+          {/* Page Header */}
+          <div className={styles.pageHeader}>
+            <h2 className={styles.pageTitle}>Stock Overview</h2>
+            <Link href="/stocklist" className={styles.newRequestBtn}>
+              View All Items
+            </Link>
+          </div>
+
+          {/* Stats Cards */}
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: '#e3f2fd' }}>📦</div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>Total Items</div>
+                <div className={styles.statValue}>{stats.totalItems}</div>
+              </div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: '#fff3e0' }}>⚠️</div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>Low Stock Items</div>
+                <div className={styles.statValue}>{stats.lowStock}</div>
+              </div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: '#e8f5e9' }}>💰</div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>Total Value</div>
+                <div className={styles.statValue}>${stats.totalValue.toFixed(2)}</div>
+              </div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: '#f3e5f5' }}>📈</div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>Recent Additions</div>
+                <div className={styles.statValue}>{stats.recentlyAdded}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Warehouse Cards Grid */}
+          <div className={styles.warehouseSection}>
+            <h3 className={styles.sectionTitle}>Stock Categories</h3>
+            <div className={styles.warehouseGrid}>
+              {Object.keys(groupedStocks).slice(0, 6).map((category, index) => (
+                <div key={index} className={styles.warehouseCard}>
+                  <div className={styles.cardHeader}>
+                    <div className={styles.itemCount}>
+                      <span className={styles.countIcon}>📦</span>
+                      {groupedStocks[category].length} ITEMS
+                    </div>
+                    <button className={styles.cardMenu}>⋯</button>
+                  </div>
+                  <div className={styles.cardBody}>
+                    <h4 className={styles.warehouseName}>{category}</h4>
+                    <div className={styles.warehouseStats}>
+                      <div className={styles.statBadge}>
+                        <span className={styles.badgeValue}>
+                          {groupedStocks[category].reduce((sum, item) => sum + (item.Quantity || 0), 0)}
+                        </span>
+                        <span className={styles.badgeLabel}>Total Qty</span>
+                      </div>
+                      <div className={styles.statBadge}>
+                        <span className={styles.badgeValue}>
+                          {groupedStocks[category].filter(item => item.Quantity <= 10).length}
+                        </span>
+                        <span className={styles.badgeLabel}>Low Stock</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.cardFooter}>
+                    Last updated: Today
+                  </div>
+                </div>
+              ))}
+
+              {/* Add New Category Card */}
+              <Link href="/stocklist" className={styles.addWarehouseCard}>
+                <div className={styles.addIcon}>+</div>
+                <div className={styles.addLabel}>View All Items</div>
+              </Link>
+            </div>
+          </div>
+
+          {/* Recent Activity & Low Stock */}
+          <div className={styles.twoColumnGrid}>
+            {/* Recent Activity */}
+            <div className={styles.activityCard}>
+              <h3 className={styles.cardTitle}>Recent Activity</h3>
+              <div className={styles.activityList}>
+                {stocks.slice(-5).reverse().map((item, index) => (
+                  <div key={index} className={styles.activityItem}>
+                    <div className={styles.activityIcon}>📦</div>
+                    <div className={styles.activityDetails}>
+                      <div className={styles.activityName}>{item.ItemName}</div>
+                      <div className={styles.activityTime}>Added • Qty: {item.Quantity}</div>
+                    </div>
+                    <div className={styles.activityValue}>${Number(item.UnitPrice || 0).toFixed(2)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Low Stock Alerts */}
+            <div className={styles.activityCard}>
+              <h3 className={styles.cardTitle}>Low Stock Alerts</h3>
+              <div className={styles.activityList}>
+                {stocks.filter(item => item.Quantity <= 10).slice(0, 5).map((item, index) => (
+                  <div key={index} className={styles.activityItem}>
+                    <div className={styles.activityIcon} style={{ background: '#ffebee' }}>⚠️</div>
+                    <div className={styles.activityDetails}>
+                      <div className={styles.activityName}>{item.ItemName}</div>
+                      <div className={styles.activityTime}>Quantity: {item.Quantity}</div>
+                    </div>
+                    <div className={styles.activityBadge}>Low</div>
+                  </div>
+                ))}
+                {stocks.filter(item => item.Quantity <= 10).length === 0 && (
+                  <div className={styles.emptyState}>No low stock items</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* Right Sidebar with Charts */}
+        <aside className={styles.rightSidebar}>
+          <div className={styles.popularSection}>
+            <h3 className={styles.sidebarTitle}>Popular Items</h3>
+            <div className={styles.popularStats}>
+              <div className={styles.popularBadge} style={{ background: '#4caf50', color: '#fff' }}>
+                {stats.recentlyAdded} added
+              </div>
+              <div className={styles.popularBadge} style={{ background: '#f44336', color: '#fff' }}>
+                {stats.lowStock} low stock
+              </div>
+            </div>
+
+            {/* Simple Bar Chart */}
+            <div className={styles.chartContainer}>
+              <div className={styles.barChart}>
+                {[65, 45, 80, 55, 90, 40, 70].map((height, i) => (
+                  <div key={i} className={styles.barWrapper}>
+                    <div
+                      className={styles.bar}
+                      style={{ height: `${height}%`, background: i === 4 ? '#4caf50' : '#e0e0e0' }}
+                    ></div>
+                    <div className={styles.barLabel}>
+                      {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'][i]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Top Items List */}
+          <div className={styles.topMaterialsSection}>
+            <h3 className={styles.sidebarTitle}>Top Materials</h3>
+            <div className={styles.materialsList}>
+              {stocks.slice(0, 5).map((item, index) => (
+                <div key={index} className={styles.materialItem}>
+                  <div className={styles.materialRank}>{index + 1}</div>
+                  <div className={styles.materialName}>{item.ItemName}</div>
+                  <div className={styles.materialQty}>{item.Quantity}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
