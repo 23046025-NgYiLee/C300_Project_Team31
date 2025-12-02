@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./listcss.module.css";
-import Navbar from "../partials/navbar";
 
 export default function StockListPage() {
   const [stocks, setStocks] = useState([]);
@@ -12,6 +11,22 @@ export default function StockListPage() {
   const [filterType, setFilterType] = useState("");
   const [minQuantity, setMinQuantity] = useState("");
   const [maxQuantity, setMaxQuantity] = useState("");
+
+  // Modal and form state
+  const [showModal, setShowModal] = useState(false);
+  const [formMessage, setFormMessage] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    quantity: "",
+    brand: "",
+    ItemClass: "",
+    type: "",
+    category: "",
+    supplier: "",
+    unitPrice: "",
+    dateAdded: "",
+    lastUpdated: ""
+  });
 
   // Filter options from backend
   const [filterOptions, setFilterOptions] = useState({
@@ -58,35 +73,103 @@ export default function StockListPage() {
     setMaxQuantity("");
   };
 
-  return (
-    <>
-      <Navbar />
-      <div className={styles.stockPage}>
-        <main className={styles.stockMain}>
-          <div className={styles.stockIntro}>
-            <h1>Our Stock List</h1>
-          </div>
+  // Handle form input changes
+  const handleFormChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-          {/* Search Bar */}
-          <div className={styles.searchSection}>
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search by name, brand, class, or type..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  className="btn btn-outline-secondary"
-                  type="button"
-                  onClick={() => setSearchTerm("")}
-                >
-                  Clear
-                </button>
-              )}
+  // Handle form submission
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setFormMessage("");
+    try {
+      const res = await fetch("http://localhost:4000/api/stocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFormMessage("Stock added successfully!");
+        setForm({
+          name: "",
+          quantity: "",
+          brand: "",
+          ItemClass: "",
+          type: "",
+          category: "",
+          supplier: "",
+          unitPrice: "",
+          dateAdded: "",
+          lastUpdated: ""
+        });
+        setTimeout(() => {
+          setShowModal(false);
+          setFormMessage("");
+          window.location.reload();
+        }, 1500);
+      } else {
+        setFormMessage(data.error || "Failed to add stock.");
+      }
+    } catch {
+      setFormMessage("Error connecting to server.");
+    }
+  };
+
+  return (
+    <div className={styles.dashboardPage}>
+      {/* Top Navigation Bar */}
+      <div className={styles.topBar}>
+        <div className={styles.brandSection}>
+          <h1 className={styles.brandName}>Inventory Pro</h1>
+        </div>
+        <div className={styles.searchBarTop}>
+          <input
+            type="text"
+            placeholder="Search by name, brand, class, or type..."
+            className={styles.searchInput}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className={styles.userSection}>
+          <button onClick={() => setShowModal(true)} className={styles.addBtn}>
+            + Add New Stock
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.mainLayout}>
+        {/* Sidebar */}
+        <aside className={styles.sidebar}>
+          <nav className={styles.sidebarNav}>
+            <Link href="/AdminDashboard" className={styles.navItem}>
+              <span className={styles.navIcon}>📊</span>
+              Dashboard
+            </Link>
+            <Link href="/stocklist" className={`${styles.navItem} ${styles.active}`}>
+              <span className={styles.navIcon}>📦</span>
+              Stock List
+            </Link>
+            <Link href="/UserRegister" className={styles.navItem}>
+              <span className={styles.navIcon}>👥</span>
+              User Management
+            </Link>
+            <div className={styles.navItem}>
+              <span className={styles.navIcon}>📋</span>
+              Reports
             </div>
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className={styles.mainContent}>
+          {/* Page Header */}
+          <div className={styles.pageHeader}>
+            <h2 className={styles.pageTitle}>Stock Inventory</h2>
+            <button onClick={() => setShowModal(true)} className={styles.newRequestBtn}>
+              + Add New Stock
+            </button>
           </div>
 
           {/* Filter Section */}
@@ -236,6 +319,84 @@ export default function StockListPage() {
           </div>
         </main>
       </div>
-    </>
+
+      {/* Add Stock Modal */}
+      {showModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Add New Stock</h2>
+              <button className={styles.closeButton} onClick={() => setShowModal(false)}>×</button>
+            </div>
+            {formMessage && (
+              <div className={formMessage.includes('success') ? styles.successMessage : styles.errorMessage}>
+                {formMessage}
+              </div>
+            )}
+            <form onSubmit={handleFormSubmit} className={styles.addStockForm}>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="name">Stock Name *</label>
+                  <input type="text" id="name" name="name" value={form.name} onChange={handleFormChange} required />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="quantity">Quantity *</label>
+                  <input type="number" id="quantity" name="quantity" min="0" step="1" value={form.quantity} onChange={handleFormChange} required />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="brand">Brand *</label>
+                  <input type="text" id="brand" name="brand" value={form.brand} onChange={handleFormChange} required />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="ItemClass">Class *</label>
+                  <input type="text" id="ItemClass" name="ItemClass" value={form.ItemClass} onChange={handleFormChange} required />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="type">Type *</label>
+                  <input type="text" id="type" name="type" value={form.type} onChange={handleFormChange} required />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="category">Category *</label>
+                  <input type="text" id="category" name="category" value={form.category} onChange={handleFormChange} required />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="supplier">Supplier *</label>
+                  <input type="text" id="supplier" name="supplier" value={form.supplier} onChange={handleFormChange} required />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="unitPrice">Unit Price *</label>
+                  <input type="number" id="unitPrice" name="unitPrice" min="0" step="0.01" value={form.unitPrice} onChange={handleFormChange} required />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="dateAdded">Date Added *</label>
+                  <input type="date" id="dateAdded" name="dateAdded" value={form.dateAdded} onChange={handleFormChange} required />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="lastUpdated">Last Updated *</label>
+                  <input type="date" id="lastUpdated" name="lastUpdated" value={form.lastUpdated} onChange={handleFormChange} required />
+                </div>
+              </div>
+
+              <div className={styles.formActions}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Add Stock</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
