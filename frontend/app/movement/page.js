@@ -21,8 +21,6 @@ export default function MovementPage() {
     fetch('http://localhost:4000/api/stocks')
       .then(res => res.json())
       .then(data => {
-        // NOTE: If your DB doesn't have a 'Location' field yet, 
-        // we default to 'Main Warehouse' for display purposes.
         const dataWithLocation = data.map(item => ({
             ...item,
             Location: item.Location || "Zone A - Arrival" 
@@ -46,9 +44,6 @@ export default function MovementPage() {
   // 3. Handle Submit Movement (Product Movement Support)
   const handleSubmitMove = async (e) => {
     e.preventDefault();
-    
-    // In a real app, you would POST this to your API here.
-    // Example: await fetch('/api/movement', { method: 'POST', body: ... })
     
     alert(`Successfully recorded: \nMoving ${moveForm.quantity} of ${selectedItem.ItemName} to ${moveForm.type === 'Shipment' ? 'Customer' : moveForm.toLocation}`);
 
