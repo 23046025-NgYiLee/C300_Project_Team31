@@ -39,10 +39,6 @@ export default function PaymentPage() {
             </p>
           </div>
 
-          {/* CHANGE MADE HERE: 
-             Changed maxWidth from '900px' to '100%' 
-             Added paddingRight to prevent it from hitting the scrollbar
-          */}
           <div style={{ width: "100%", marginTop: "20px", paddingRight: "20px" }}>
             
             {/* Total Display */}
@@ -82,7 +78,6 @@ export default function PaymentPage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: "2px solid #4e5dbdff", backgroundColor: "#f8f9fa" }}>
-                      {/* Added width percentages to distribute space evenly in landscape */}
                       <th style={{ textAlign: "left", padding: "16px", color: "#4e5dbdff", width: "30%" }}>Item Name</th>
                       <th style={{ textAlign: "left", padding: "16px", color: "#4e5dbdff", width: "15%" }}>Category</th>
                       <th style={{ textAlign: "left", padding: "16px", color: "#4e5dbdff", width: "15%" }}>Date Added</th>
