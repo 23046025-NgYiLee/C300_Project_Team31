@@ -149,7 +149,15 @@ export default function StockListPage() {
             </Link>
             <Link href="/stocklist" className={`${styles.navItem} ${styles.active}`}>
               <span className={styles.navIcon}>📦</span>
-              Stock List
+              Stock
+            </Link>
+            <Link href="/payments" className={styles.navItem}>
+              <span className={styles.navIcon}>💳</span>
+              Payment
+            </Link>
+            <Link href="/movement" className={styles.navItem}>
+              <span className={styles.navIcon}>🚚</span>
+              Movement
             </Link>
             <Link href="/UserRegister" className={styles.navItem}>
               <span className={styles.navIcon}>👥</span>

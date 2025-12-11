@@ -88,6 +88,14 @@ export default function AdminDashboard() {
               <span className={styles.navIcon}>📦</span>
               Stock
             </Link>
+            <Link href="/payments" className={styles.navItem}>
+              <span className={styles.navIcon}>💳</span>
+              Payment
+            </Link>
+            <Link href="/movement" className={styles.navItem}>
+              <span className={styles.navIcon}>🚚</span>
+              Movement
+            </Link>
             <Link href="/UserRegister" className={styles.navItem}>
               <span className={styles.navIcon}>👥</span>
               User Management
@@ -99,7 +107,7 @@ export default function AdminDashboard() {
           </nav>
         </aside>
 
-        {/* Main Content s */}
+        {/* Main Content  */}
         <main className={styles.mainContent}>
           {/* Page Header */}
           <div className={styles.pageHeader}>

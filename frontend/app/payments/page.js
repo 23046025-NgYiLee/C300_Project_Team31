@@ -1,10 +1,17 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Navbar from "../partials/navbar";
+import Link from "next/link";
+import styles from "../AdminDashboard/dashboard.module.css";
 
 export default function PaymentPage() {
+  const [user, setUser] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loggedUser = JSON.parse(localStorage.getItem("user")) || { name: "Admin" };
+    setUser(loggedUser);
+  }, []);
 
   useEffect(() => {
     fetch('http://localhost:4000/api/stocks')
@@ -20,6 +27,11 @@ export default function PaymentPage() {
       });
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    window.location.href = "/";
+  };
+
   const totalPayment = payments.reduce((acc, item) => {
     const qty = item.Quantity || 0;
     const price = item.UnitPrice || 0;
@@ -27,110 +39,154 @@ export default function PaymentPage() {
   }, 0);
 
   return (
-    <>
-      <Navbar />
-      <div className="page" style={{ width: "100%" }}> {/* Ensure parent is wide */}
-        <main className="main" style={{ width: "100%", maxWidth: "100%", padding: "20px" }}> {/* Allow Main to be full width */}
-          
-          <div className="intro">
-            <h2 style={{ fontSize: "3rem", color: "#4e5dbdff" }}>Payment History</h2>
-            <p style={{ marginTop: "10px", color: "#666" }}>
-              Detailed expenditure report.
-            </p>
+    <div className={styles.dashboardPage}>
+      {/* Top Navigation Bar */}
+      <div className={styles.topBar}>
+        <div className={styles.brandSection}>
+          <h1 className={styles.brandName}>Inventory Pro</h1>
+        </div>
+        <div className={styles.searchBar}>
+          <input
+            type="text"
+            placeholder="Search by project or item..."
+            className={styles.searchInput}
+          />
+        </div>
+        {user && (
+          <div className={styles.userSection}>
+            <span className={styles.userName}>{user.name}</span>
+            <button onClick={handleLogout} className={styles.logoutBtn}>Logout</button>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.mainLayout}>
+        {/* Sidebar */}
+        <aside className={styles.sidebar}>
+          <nav className={styles.sidebarNav}>
+            <Link href="/AdminDashboard" className={styles.navItem}>
+              <span className={styles.navIcon}>📊</span>
+              Dashboard
+            </Link>
+            <Link href="/stocklist" className={styles.navItem}>
+              <span className={styles.navIcon}>📦</span>
+              Stock
+            </Link>
+            <Link href="/payments" className={`${styles.navItem} ${styles.active}`}>
+              <span className={styles.navIcon}>💳</span>
+              Payment
+            </Link>
+            <Link href="/movement" className={styles.navItem}>
+              <span className={styles.navIcon}>🚚</span>
+              Movement
+            </Link>
+            <Link href="/UserRegister" className={styles.navItem}>
+              <span className={styles.navIcon}>👥</span>
+              User Management
+            </Link>
+            <div className={styles.navItem}>
+              <span className={styles.navIcon}>📋</span>
+              Reports
+            </div>
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className={styles.mainContent}>
+          {/* Page Header */}
+          <div className={styles.pageHeader}>
+            <h2 className={styles.pageTitle}>Payment History</h2>
           </div>
 
-          <div style={{ width: "100%", marginTop: "20px", paddingRight: "20px" }}>
-            
-            {/* Total Display */}
-            <div style={{ 
-                marginBottom: "24px", 
-                padding: "20px", 
-                backgroundColor: "#f4f4f9", 
-                borderLeft: "5px solid #4e5dbdff",
-                borderRadius: "4px", 
-                display: "flex", 
-                justifyContent: "space-between",
-                alignItems: "center",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                width: "100%" // Force full width
-            }}>
-                <div>
-                  <h3 style={{ margin: 0, color: "#333" }}>Total Expenditure</h3>
-                  <small style={{ color: "#666" }}>Accumulated value of all stocks</small>
-                </div>
-                <span style={{ fontSize: "2rem", fontWeight: "bold", color: "#4e5dbdff" }}>
-                    ${totalPayment.toFixed(2)}
-                </span>
-            </div>
+          <p style={{ marginBottom: "24px", color: "#666" }}>
+            Detailed expenditure report showing all stock purchases.
+          </p>
 
-            {/* Table Container - Full Width */}
-            <div style={{ 
-                overflowX: "auto", 
-                border: "1px solid #ddd", 
-                borderRadius: "8px", 
-                padding: "16px",
-                backgroundColor: "white",
-                width: "100%" // Force full width
-            }}>
-              {loading ? (
-                <p style={{ textAlign: "center", padding: "20px" }}>Loading payment records...</p>
-              ) : (
+          {/* Total Expenditure Card */}
+          <div className={styles.statsGrid} style={{ marginBottom: "32px" }}>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: '#e8f5e9' }}>💰</div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>Total Expenditure</div>
+                <div className={styles.statValue}>${totalPayment.toFixed(2)}</div>
+              </div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} style={{ background: '#e3f2fd' }}>📋</div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>Total Records</div>
+                <div className={styles.statValue}>{payments.length}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Table */}
+          <div className={styles.activityCard}>
+            <h3 className={styles.cardTitle}>Payment Records</h3>
+
+            {loading ? (
+              <p style={{ textAlign: "center", padding: "40px", color: "#78909c" }}>
+                Loading payment records...
+              </p>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ borderBottom: "2px solid #4e5dbdff", backgroundColor: "#f8f9fa" }}>
-                      <th style={{ textAlign: "left", padding: "16px", color: "#4e5dbdff", width: "30%" }}>Item Name</th>
-                      <th style={{ textAlign: "left", padding: "16px", color: "#4e5dbdff", width: "15%" }}>Category</th>
-                      <th style={{ textAlign: "left", padding: "16px", color: "#4e5dbdff", width: "15%" }}>Date Added</th>
-                      <th style={{ textAlign: "center", padding: "16px", color: "#4e5dbdff", width: "10%" }}>Qty</th>
-                      <th style={{ textAlign: "right", padding: "16px", color: "#4e5dbdff", width: "15%" }}>Unit Price</th>
-                      <th style={{ textAlign: "right", padding: "16px", color: "#4e5dbdff", width: "15%" }}>Total</th>
+                    <tr style={{ borderBottom: "2px solid #e0e0e0" }}>
+                      <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Item Name</th>
+                      <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Category</th>
+                      <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Date Added</th>
+                      <th style={{ textAlign: "center", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Qty</th>
+                      <th style={{ textAlign: "right", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Unit Price</th>
+                      <th style={{ textAlign: "right", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {payments.length > 0 ? (
                       payments.map((item) => (
-                        <tr key={item.ItemID || item._id} style={{ borderBottom: "1px solid #eee" }}>
+                        <tr key={item.ItemID || item._id} style={{ borderBottom: "1px solid #f0f0f0" }}>
                           <td style={{ padding: "16px" }}>
-                            <strong style={{ fontSize: "1.1rem" }}>{item.ItemName}</strong>
-                            <div style={{ fontSize: "0.85rem", color: "#777", marginTop: "4px" }}>{item.Brand}</div>
+                            <strong style={{ fontSize: "0.95rem", color: "#2c3e50" }}>{item.ItemName}</strong>
+                            <div style={{ fontSize: "0.8rem", color: "#78909c", marginTop: "4px" }}>{item.Brand}</div>
                           </td>
-                          <td style={{ padding: "16px" }}>{item.ItemClass || item.category || "N/A"}</td>
-                          <td style={{ padding: "16px" }}>
-                             {item.DateAdded ? new Date(item.DateAdded).toLocaleDateString() : "N/A"}
+                          <td style={{ padding: "16px", color: "#546e7a" }}>{item.ItemClass || item.category || "N/A"}</td>
+                          <td style={{ padding: "16px", color: "#546e7a" }}>
+                            {item.DateAdded ? new Date(item.DateAdded).toLocaleDateString() : "N/A"}
                           </td>
                           <td style={{ padding: "16px", textAlign: "center" }}>
-                            <span style={{ 
-                                backgroundColor: "#e3f2fd", 
-                                color: "#4e5dbdff", 
-                                padding: "4px 12px", 
-                                borderRadius: "12px",
-                                fontWeight: "bold"
+                            <span style={{
+                              backgroundColor: "#e3f2fd",
+                              color: "#1565c0",
+                              padding: "4px 12px",
+                              borderRadius: "12px",
+                              fontWeight: "600",
+                              fontSize: "0.85rem"
                             }}>
-                                {item.Quantity}
+                              {item.Quantity}
                             </span>
                           </td>
-                          <td style={{ padding: "16px", textAlign: "right" }}>
+                          <td style={{ padding: "16px", textAlign: "right", color: "#546e7a" }}>
                             ${Number(item.UnitPrice || 0).toFixed(2)}
                           </td>
-                          <td style={{ padding: "16px", textAlign: "right", fontWeight: "bold", color: "#333", fontSize: "1.1rem" }}>
-                            ${( (item.Quantity || 0) * (item.UnitPrice || 0) ).toFixed(2)}
+                          <td style={{ padding: "16px", textAlign: "right", fontWeight: "700", color: "#4caf50", fontSize: "0.95rem" }}>
+                            ${((item.Quantity || 0) * (item.UnitPrice || 0)).toFixed(2)}
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" style={{ padding: "30px", textAlign: "center", fontSize: "1.2rem", color: "#888" }}>
+                        <td colSpan="6" style={{ padding: "40px", textAlign: "center", fontSize: "0.95rem", color: "#78909c" }}>
                           No payment records found.
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 }

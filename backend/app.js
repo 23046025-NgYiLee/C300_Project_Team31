@@ -337,6 +337,138 @@ app.post('/api/stocks', (req, res) => {
 });
 
 
+// ========== MOVEMENT TRACKING API ENDPOINTS ==========
+
+// Record a new movement (Transfer or Shipment)
+app.post('/api/movements', (req, res) => {
+  const { itemId, movementType, fromLocation, toLocation, quantity, movedBy, notes } = req.body;
+
+  // Validate required fields
+  if (!itemId || !movementType || !quantity) {
+    return res.status(400).json({ error: 'ItemID, movement type, and quantity are required' });
+  }
+
+  // First, get the current item details
+  connection.query('SELECT * FROM Inventory WHERE ItemID = ?', [itemId], (err, items) => {
+    if (err) {
+      console.error('Error fetching item:', err);
+      return res.status(500).json({ error: 'Database error', details: err.message });
+    }
+
+    if (items.length === 0) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    const item = items[0];
+    const currentLocation = item.Location || 'Zone A - Arrival';
+
+    // Validate quantity for shipments
+    if (movementType === 'Shipment' && quantity > item.Quantity) {
+      return res.status(400).json({ error: 'Insufficient quantity for shipment' });
+    }
+
+    // Prepare movement record
+    const movementData = {
+      fromLocation: currentLocation,
+      toLocation: movementType === 'Shipment' ? 'Customer' : toLocation,
+    };
+
+    // Insert movement history record
+    const insertMovementSql = `
+      INSERT INTO MovementHistory 
+      (ItemID, MovementType, FromLocation, ToLocation, Quantity, MovedBy, Notes) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    connection.query(
+      insertMovementSql,
+      [itemId, movementType, movementData.fromLocation, movementData.toLocation, quantity, movedBy || 'System', notes || ''],
+      (insertErr, insertResult) => {
+        if (insertErr) {
+          console.error('Error recording movement:', insertErr);
+          return res.status(500).json({ error: 'Failed to record movement', details: insertErr.message });
+        }
+
+        // Update the inventory based on movement type
+        let updateSql;
+        let updateParams;
+
+        if (movementType === 'Transfer') {
+          // Update location for transfer
+          updateSql = 'UPDATE Inventory SET Location = ?, LastUpdated = NOW() WHERE ItemID = ?';
+          updateParams = [toLocation, itemId];
+        } else if (movementType === 'Shipment') {
+          // Reduce quantity for shipment
+          updateSql = 'UPDATE Inventory SET Quantity = Quantity - ?, LastUpdated = NOW() WHERE ItemID = ?';
+          updateParams = [quantity, itemId];
+        }
+
+        connection.query(updateSql, updateParams, (updateErr) => {
+          if (updateErr) {
+            console.error('Error updating inventory:', updateErr);
+            return res.status(500).json({ error: 'Failed to update inventory', details: updateErr.message });
+          }
+
+          res.status(201).json({
+            message: 'Movement recorded successfully',
+            movementId: insertResult.insertId,
+            type: movementType,
+            itemId: itemId
+          });
+        });
+      }
+    );
+  });
+});
+
+// Get movement history for a specific item
+app.get('/api/movements/:itemId', (req, res) => {
+  const { itemId } = req.params;
+
+  const sql = `
+    SELECT 
+      m.*,
+      i.ItemName,
+      i.Brand
+    FROM MovementHistory m
+    JOIN Inventory i ON m.ItemID = i.ItemID
+    WHERE m.ItemID = ?
+    ORDER BY m.MovementDate DESC
+  `;
+
+  connection.query(sql, [itemId], (err, results) => {
+    if (err) {
+      console.error('Error fetching movement history:', err);
+      return res.status(500).json({ error: 'Failed to fetch movement history', details: err.message });
+    }
+    res.json(results);
+  });
+});
+
+// Get all movement history (optional - for reports)
+app.get('/api/movements', (req, res) => {
+  const sql = `
+    SELECT 
+      m.*,
+      i.ItemName,
+      i.Brand,
+      i.ItemClass
+    FROM MovementHistory m
+    JOIN Inventory i ON m.ItemID = i.ItemID
+    ORDER BY m.MovementDate DESC
+    LIMIT 100
+  `;
+
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching movements:', err);
+      return res.status(500).json({ error: 'Failed to fetch movements', details: err.message });
+    }
+    res.json(results);
+  });
+});
+
+
 app.post('/api/user', (req, res) => {
 
   const { name, email, password, is_staff, is_supervisor } = req.body;
