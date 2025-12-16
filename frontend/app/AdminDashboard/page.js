@@ -100,10 +100,21 @@ export default function AdminDashboard() {
               <span className={styles.navIcon}>👥</span>
               User Management
             </Link>
-            <div className={styles.navItem}>
-              <span className={styles.navIcon}>📋</span>
-              Reports
-            </div>
+
+            {/* --- UPDATED SECTION START: NEW REPORTS LINKS --- */}
+            <div className={styles.navDivider} style={{ margin: "15px 0", borderTop: "1px solid #ddd" }}></div>
+            
+            <Link href="/reports/accounts" className={styles.navItem}>
+              <span className={styles.navIcon}>💹</span>
+              Accounts Report
+            </Link>
+            
+            <Link href="/reports/products" className={styles.navItem}>
+              <span className={styles.navIcon}>📈</span>
+              Product Report
+            </Link>
+            {/* --- UPDATED SECTION END --- */}
+
           </nav>
         </aside>
 
