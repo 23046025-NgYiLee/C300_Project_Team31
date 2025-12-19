@@ -484,6 +484,69 @@ app.post('/api/user', (req, res) => {
 });
 
 
+// ========== REPORTS API ENDPOINTS ==========
+
+// Get Accounts Reports
+app.get('/api/accounts_reports', (req, res) => {
+  const sql = 'SELECT * FROM Accounts_Reports ORDER BY reportDate DESC';
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching accounts reports:', err);
+      return res.status(500).json({ error: 'Failed to fetch accounts reports', details: err.message });
+    }
+    res.json(results);
+  });
+});
+
+// Get Product Reports  
+app.get('/api/product_reports', (req, res) => {
+  const sql = 'SELECT * FROM Product_Reports ORDER BY reportDate DESC';
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching product reports:', err);
+      return res.status(500).json({ error: 'Failed to fetch product reports', details: err.message });
+    }
+    res.json(results);
+  });
+});
+
+// Get Inventory Reports
+app.get('/api/inventory_reports', (req, res) => {
+  const sql = 'SELECT * FROM Inventory_Reports ORDER BY reportDate DESC';
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching inventory reports:', err);
+      return res.status(500).json({ error: 'Failed to fetch inventory reports', details: err.message });
+    }
+    res.json(results);
+  });
+});
+
+// Get Transaction Reports
+app.get('/api/transaction_reports', (req, res) => {
+  const sql = 'SELECT * FROM Transaction_Reports ORDER BY reportDate DESC';
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching transaction reports:', err);
+      return res.status(500).json({ error: 'Failed to fetch transaction reports', details: err.message });
+    }
+    res.json(results);
+  });
+});
+
+// Get Transactions
+app.get('/api/transactions', (req, res) => {
+  const sql = 'SELECT * FROM Transactions ORDER BY transactionDate DESC';
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching transactions:', err);
+      return res.status(500).json({ error: 'Failed to fetch transactions', details: err.message });
+    }
+    res.json(results);
+  });
+});
+
+
 
 
 

@@ -235,16 +235,15 @@
 }
 
 .cardGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 32px;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  justify-items: center;
 }
 
 .cardCol {
-  flex: 1 1 340px;
-  max-width: 370px;
-  min-width: 270px;
+  width: 100%;
+  max-width: 400px;
   display: flex;
   align-items: stretch;
 }

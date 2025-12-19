@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "../AdminDashboard/dashboard.module.css";
 
-export default function DashboardLayout({ children, activePage = "" }) {
+export default function DashboardLayout({ children, activePage = "", userRole = "admin" }) {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -58,14 +58,22 @@ export default function DashboardLayout({ children, activePage = "" }) {
                             <span className={styles.navIcon}>🚚</span>
                             Movement
                         </Link>
-                        <Link href="/UserRegister" className={`${styles.navItem} ${activePage === "users" ? styles.active : ""}`}>
-                            <span className={styles.navIcon}>👥</span>
-                            User Management
-                        </Link>
-                        <div className={styles.navItem}>
-                            <span className={styles.navIcon}>📋</span>
-                            Reports
-                        </div>
+
+                        {userRole === "admin" && (
+                            <>
+                                <Link href="/UserRegister" className={`${styles.navItem} ${activePage === "users" ? styles.active : ""}`}>
+                                    <span className={styles.navIcon}>👥</span>
+                                    User Management
+                                </Link>
+
+                                <div className={styles.navDivider} style={{ margin: "15px 0", borderTop: "1px solid #ddd" }}></div>
+
+                                <Link href="/reports" className={`${styles.navItem} ${activePage === "reports" ? styles.active : ""}`}>
+                                    <span className={styles.navIcon}>📊</span>
+                                    Reports
+                                </Link>
+                            </>
+                        )}
                     </nav>
                 </aside>
 

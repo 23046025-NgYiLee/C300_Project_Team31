@@ -1,7 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import DashboardLayout from "../partials/DashboardLayout";
 import styles from "./listcss.module.css";
+import dashboardStyles from "../AdminDashboard/dashboard.module.css";
 
 export default function StockListPage() {
   const [stocks, setStocks] = useState([]);
@@ -117,215 +119,171 @@ export default function StockListPage() {
   };
 
   return (
-    <div className={styles.dashboardPage}>
-      {/* Top Navigation Bar */}
-      <div className={styles.topBar}>
-        <div className={styles.brandSection}>
-          <h1 className={styles.brandName}>Inventory Pro</h1>
+    <DashboardLayout activePage="stock">
+      {/* Page Header */}
+      <div className={dashboardStyles.pageHeader}>
+        <h2 className={dashboardStyles.pageTitle}>Stock Inventory</h2>
+        <button onClick={() => setShowModal(true)} className={dashboardStyles.newRequestBtn}>
+          + Add New Stock
+        </button>
+      </div>
+
+      {/* Search Bar */}
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          placeholder="Search by name, brand, class, or type..."
+          className={dashboardStyles.searchInput}
+          style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #e0e0e0" }}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Filter Section */}
+      <div className={styles.filterSection}>
+        <div className={styles.filterGrid}>
+          <div className={styles.filterItem}>
+            <label htmlFor="brandFilter">Brand</label>
+            <select
+              id="brandFilter"
+              className="form-select"
+              value={filterBrand}
+              onChange={(e) => setFilterBrand(e.target.value)}
+            >
+              <option value="">All Brands</option>
+              {filterOptions.brands.map(brand => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterItem}>
+            <label htmlFor="classFilter">Class</label>
+            <select
+              id="classFilter"
+              className="form-select"
+              value={filterClass}
+              onChange={(e) => setFilterClass(e.target.value)}
+            >
+              <option value="">All Classes</option>
+              {filterOptions.classes.map(cls => (
+                <option key={cls} value={cls}>{cls}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterItem}>
+            <label htmlFor="typeFilter">Type</label>
+            <select
+              id="typeFilter"
+              className="form-select"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+            >
+              <option value="">All Types</option>
+              {filterOptions.types.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.filterItem}>
+            <label htmlFor="minQty">Min Quantity</label>
+            <input
+              id="minQty"
+              type="number"
+              className="form-control"
+              placeholder="Min"
+              value={minQuantity}
+              onChange={(e) => setMinQuantity(e.target.value)}
+              min="0"
+            />
+          </div>
+
+          <div className={styles.filterItem}>
+            <label htmlFor="maxQty">Max Quantity</label>
+            <input
+              id="maxQty"
+              type="number"
+              className="form-control"
+              placeholder="Max"
+              value={maxQuantity}
+              onChange={(e) => setMaxQuantity(e.target.value)}
+              min="0"
+            />
+          </div>
+
+          <div className={styles.filterItem} style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button
+              className="btn btn-secondary w-100"
+              onClick={clearFilters}
+            >
+              Clear All Filters
+            </button>
+          </div>
         </div>
-        <div className={styles.searchBarTop}>
-          <input
-            type="text"
-            placeholder="Search by name, brand, class, or type..."
-            className={styles.searchInput}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className={styles.userSection}>
-          <button onClick={() => setShowModal(true)} className={styles.addBtn}>
-            + Add New Stock
-          </button>
+
+        {/* Results count */}
+        <div className={styles.resultsCount}>
+          Showing {stocks.length} item{stocks.length !== 1 ? 's' : ''}
         </div>
       </div>
 
-      <div className={styles.mainLayout}>
-        {/* Sidebar */}
-        <aside className={styles.sidebar}>
-          <nav className={styles.sidebarNav}>
-            <Link href="/AdminDashboard" className={styles.navItem}>
-              <span className={styles.navIcon}>📊</span>
-              Dashboard
-            </Link>
-            <Link href="/stocklist" className={`${styles.navItem} ${styles.active}`}>
-              <span className={styles.navIcon}>📦</span>
-              Stock
-            </Link>
-            <Link href="/payments" className={styles.navItem}>
-              <span className={styles.navIcon}>💳</span>
-              Payment
-            </Link>
-            <Link href="/movement" className={styles.navItem}>
-              <span className={styles.navIcon}>🚚</span>
-              Movement
-            </Link>
-            <Link href="/UserRegister" className={styles.navItem}>
-              <span className={styles.navIcon}>👥</span>
-              User Management
-            </Link>
-            <div className={styles.navItem}>
-              <span className={styles.navIcon}>📋</span>
-              Reports
-            </div>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className={styles.mainContent}>
-          {/* Page Header */}
-          <div className={styles.pageHeader}>
-            <h2 className={styles.pageTitle}>Stock Inventory</h2>
-            <button onClick={() => setShowModal(true)} className={styles.newRequestBtn}>
-              + Add New Stock
-            </button>
+      {/* Stock Cards Grid */}
+      <div className={styles.cardGrid}>
+        {stocks.length === 0 ? (
+          <div style={{ width: "100%", color: "#777", textAlign: "center", padding: "2rem" }}>
+            No stocks match your search criteria.
           </div>
-
-          {/* Filter Section */}
-          <div className={styles.filterSection}>
-            <div className={styles.filterGrid}>
-              <div className={styles.filterItem}>
-                <label htmlFor="brandFilter">Brand</label>
-                <select
-                  id="brandFilter"
-                  className="form-select"
-                  value={filterBrand}
-                  onChange={(e) => setFilterBrand(e.target.value)}
-                >
-                  <option value="">All Brands</option>
-                  {filterOptions.brands.map(brand => (
-                    <option key={brand} value={brand}>{brand}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.filterItem}>
-                <label htmlFor="classFilter">Class</label>
-                <select
-                  id="classFilter"
-                  className="form-select"
-                  value={filterClass}
-                  onChange={(e) => setFilterClass(e.target.value)}
-                >
-                  <option value="">All Classes</option>
-                  {filterOptions.classes.map(cls => (
-                    <option key={cls} value={cls}>{cls}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.filterItem}>
-                <label htmlFor="typeFilter">Type</label>
-                <select
-                  id="typeFilter"
-                  className="form-select"
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                >
-                  <option value="">All Types</option>
-                  {filterOptions.types.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.filterItem}>
-                <label htmlFor="minQty">Min Quantity</label>
-                <input
-                  id="minQty"
-                  type="number"
-                  className="form-control"
-                  placeholder="Min"
-                  value={minQuantity}
-                  onChange={(e) => setMinQuantity(e.target.value)}
-                  min="0"
-                />
-              </div>
-
-              <div className={styles.filterItem}>
-                <label htmlFor="maxQty">Max Quantity</label>
-                <input
-                  id="maxQty"
-                  type="number"
-                  className="form-control"
-                  placeholder="Max"
-                  value={maxQuantity}
-                  onChange={(e) => setMaxQuantity(e.target.value)}
-                  min="0"
-                />
-              </div>
-
-              <div className={styles.filterItem} style={{ display: 'flex', alignItems: 'flex-end' }}>
-                <button
-                  className="btn btn-secondary w-100"
-                  onClick={clearFilters}
-                >
-                  Clear All Filters
-                </button>
-              </div>
-            </div>
-
-            {/* Results count */}
-            <div className={styles.resultsCount}>
-              Showing {stocks.length} item{stocks.length !== 1 ? 's' : ''}
-            </div>
-          </div>
-
-          {/* Stock Cards Grid */}
-          <div className={styles.cardGrid}>
-            {stocks.length === 0 ? (
-              <div style={{ width: "100%", color: "#777", textAlign: "center", padding: "2rem" }}>
-                No stocks match your search criteria.
-              </div>
-            ) : (
-              stocks.map((stock) => (
-                <div className={styles.cardCol} key={stock.ItemID}>
-                  <div className={styles.stockCard}>
-                    <div className={styles.stockImgWrap}>
-                      <img
-                        className={styles.stockImage}
-                        src={`/images/${stock.image}`}
-                        alt={`${stock.name} image`}
-                      />
+        ) : (
+          stocks.map((stock) => (
+            <div className={styles.cardCol} key={stock.ItemID}>
+              <div className={styles.stockCard}>
+                <div className={styles.stockImgWrap}>
+                  <img
+                    className={styles.stockImage}
+                    src={`/images/${stock.image}`}
+                    alt={`${stock.name} image`}
+                  />
+                </div>
+                <div className={styles.stockCardBody}>
+                  <div className={styles.stockCardTitle}>{stock.ItemName}</div>
+                  <div className={styles.stockCardDesc}>
+                    Quantity: {stock.Quantity}<br />
+                    Brand: {stock.Brand}<br />
+                    Class: {stock.ItemClass}<br />
+                    Type: {stock.ItemType}<br />
+                  </div>
+                  <div className={styles.stockBtnBar}>
+                    <div className="d-flex justify-content-between">
+                      <Link href={`/stocklist/detail/${stock.ItemID}`} className={styles.stockBtn}>Detail</Link>
                     </div>
-                    <div className={styles.stockCardBody}>
-                      <div className={styles.stockCardTitle}>{stock.ItemName}</div>
-                      <div className={styles.stockCardDesc}>
-                        Quantity: {stock.Quantity}<br />
-                        Brand: {stock.Brand}<br />
-                        Class: {stock.ItemClass}<br />
-                        Type: {stock.ItemType}<br />
-                      </div>
-                      <div className={styles.stockBtnBar}>
-                        <div className="d-flex justify-content-between">
-                          <Link href={`/stocklist/detail/${stock.ItemID}`} className={styles.stockBtn}>Detail</Link>
-                        </div>
-                        <div className="d-flex justify-content-between">
-                          <button
-                            type="button"
-                            className="btn btn-dark btn-sm"
-                            onClick={() => {
-                              if (window.confirm('Are you sure you want to delete this product?')) {
-                                fetch(`http://localhost:4000/api/stocks/${stock.ItemID}`, {
-                                  method: 'DELETE'
-                                })
-                                  .then(res => res.json())
-                                  .then(() => {
-                                    setStocks(prevStocks => prevStocks.filter(s => s.ItemID !== stock.ItemID));
-                                  })
-                              }
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
+                    <div className="d-flex justify-content-between">
+                      <button
+                        type="button"
+                        className="btn btn-dark btn-sm"
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this product?')) {
+                            fetch(`http://localhost:4000/api/stocks/${stock.ItemID}`, {
+                              method: 'DELETE'
+                            })
+                              .then(res => res.json())
+                              .then(() => {
+                                setStocks(prevStocks => prevStocks.filter(s => s.ItemID !== stock.ItemID));
+                              })
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        </main>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Add Stock Modal */}
@@ -405,6 +363,6 @@ export default function StockListPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }
