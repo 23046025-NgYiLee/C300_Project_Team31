@@ -1,9 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import DashboardLayout from "../partials/DashboardLayout";
+// Make sure this path points to your actual layout component
+import DashboardLayout from "../partials/DashboardLayout"; 
+// Ensure these CSS modules exist at these paths
 import styles from "./listcss.module.css";
-import dashboardStyles from "../AdminDashboard/dashboard.module.css";
+import dashboardStyles from "../AdminDashboard/dashboard.module.css"; 
 
 export default function StockListPage() {
   const [stocks, setStocks] = useState([]);
@@ -122,7 +124,26 @@ export default function StockListPage() {
     <DashboardLayout activePage="stock">
       {/* Page Header */}
       <div className={dashboardStyles.pageHeader}>
-        <h2 className={dashboardStyles.pageTitle}>Stock Inventory</h2>
+        <div>
+            <h2 className={dashboardStyles.pageTitle}>Stock Inventory</h2>
+            
+            {/* --- NEW LINK ADDED HERE --- */}
+            <Link 
+                href="/stocktaking" 
+                style={{ 
+                    display: "inline-block", 
+                    marginTop: "5px", 
+                    color: "#4e5dbdff", 
+                    fontWeight: "bold", 
+                    textDecoration: "none",
+                    fontSize: "0.95rem"
+                }}
+            >
+                ➜ Go to Stock Taking 
+            </Link>
+            {/* --------------------------- */}
+            
+        </div>
         <button onClick={() => setShowModal(true)} className={dashboardStyles.newRequestBtn}>
           + Add New Stock
         </button>
@@ -245,6 +266,7 @@ export default function StockListPage() {
                     className={styles.stockImage}
                     src={`/images/${stock.image}`}
                     alt={`${stock.name} image`}
+                    onError={(e) => { e.target.src = "/images/placeholder.png" }} // Fallback image
                   />
                 </div>
                 <div className={styles.stockCardBody}>
