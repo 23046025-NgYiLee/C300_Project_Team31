@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 // Make sure this path points to your actual layout component
-import DashboardLayout from "../partials/DashboardLayout"; 
+import DashboardLayout from "../partials/DashboardLayout";
 // Ensure these CSS modules exist at these paths
 import styles from "./listcss.module.css";
-import dashboardStyles from "../AdminDashboard/dashboard.module.css"; 
+import dashboardStyles from "../AdminDashboard/dashboard.module.css";
 
 export default function StockListPage() {
   const [stocks, setStocks] = useState([]);
@@ -125,28 +125,40 @@ export default function StockListPage() {
       {/* Page Header */}
       <div className={dashboardStyles.pageHeader}>
         <div>
-            <h2 className={dashboardStyles.pageTitle}>Stock Inventory</h2>
-            
-            {/* --- NEW LINK ADDED HERE --- */}
-            <Link 
-                href="/stocktaking" 
-                style={{ 
-                    display: "inline-block", 
-                    marginTop: "5px", 
-                    color: "#4e5dbdff", 
-                    fontWeight: "bold", 
-                    textDecoration: "none",
-                    fontSize: "0.95rem"
-                }}
-            >
-                ➜ Go to Stock Taking 
-            </Link>
-            {/* --------------------------- */}
-            
+          <h2 className={dashboardStyles.pageTitle}>Stock Inventory</h2>
+
+          {/* --- NEW LINK ADDED HERE --- */}
+          <Link
+            href="/stocktaking"
+            style={{
+              display: "inline-block",
+              marginTop: "5px",
+              color: "#4e5dbdff",
+              fontWeight: "bold",
+              textDecoration: "none",
+              fontSize: "0.95rem"
+            }}
+          >
+            ➜ Go to Stock Taking
+          </Link>
+          {/* --------------------------- */}
+
         </div>
-        <button onClick={() => setShowModal(true)} className={dashboardStyles.newRequestBtn}>
-          + Add New Stock
-        </button>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            onClick={() => {
+              // Download overall inventory report as CSV
+              window.open('http://localhost:4000/api/reports/inventory/csv', '_blank');
+            }}
+            className={dashboardStyles.newRequestBtn}
+            style={{ backgroundColor: "#27ae60" }}
+          >
+            📊 Overall Report
+          </button>
+          <button onClick={() => setShowModal(true)} className={dashboardStyles.newRequestBtn}>
+            + Add New Stock
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -281,7 +293,17 @@ export default function StockListPage() {
                     <div className="d-flex justify-content-between">
                       <Link href={`/stocklist/detail/${stock.ItemID}`} className={styles.stockBtn}>Detail</Link>
                     </div>
-                    <div className="d-flex justify-content-between">
+                    <div className="d-flex justify-content-between gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-success btn-sm"
+                        onClick={() => {
+                          // Download individual item report as CSV
+                          window.open(`http://localhost:4000/api/reports/item/${stock.ItemID}/csv`, '_blank');
+                        }}
+                      >
+                        📊 Report
+                      </button>
                       <button
                         type="button"
                         className="btn btn-dark btn-sm"
