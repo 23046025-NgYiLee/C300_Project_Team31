@@ -293,17 +293,7 @@ export default function StockListPage() {
                     <div className="d-flex justify-content-between">
                       <Link href={`/stocklist/detail/${stock.ItemID}`} className={styles.stockBtn}>Detail</Link>
                     </div>
-                    <div className="d-flex justify-content-between gap-2">
-                      <button
-                        type="button"
-                        className="btn btn-success btn-sm"
-                        onClick={() => {
-                          // Download individual item report as CSV
-                          window.open(`http://localhost:4000/api/reports/item/${stock.ItemID}/csv`, '_blank');
-                        }}
-                      >
-                        📊 Report
-                      </button>
+                    <div className="d-flex justify-content-between">
                       <button
                         type="button"
                         className="btn btn-dark btn-sm"
