@@ -60,6 +60,9 @@ app.post('/register', async (req, res) => {
   if (!email || !password)
     return res.status(400).json({ error: 'Email and password are required' });
 
+  // Extract name from email (before @ symbol)
+  const name = email.split('@')[0];
+
   // Check if email already exists
   connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
     if (err) {
@@ -70,9 +73,10 @@ app.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Insert with name and default role flags
     connection.query(
-      'INSERT INTO user (email, password) VALUES (?, ?)',
-      [email, hashedPassword],
+      'INSERT INTO user (name, email, password, is_admin, is_supervisor, is_staff) VALUES (?, ?, ?, 0, 0, 1)',
+      [name, email, hashedPassword],
       (err, result) => {
         if (err) {
           console.error('INSERT error:', err);
