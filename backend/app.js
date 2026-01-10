@@ -281,7 +281,7 @@ app.get('/api/stocks', (req, res) => {
   });
 });
 
-// Get unique filter values for dropdowns
+// Get unique filter values for dropdowns (MUST come before /:id route)
 app.get('/api/stocks/filters/values', (req, res) => {
   const queries = {
     brands: 'SELECT DISTINCT Brand FROM Inventory WHERE Brand IS NOT NULL AND Brand != "" ORDER BY Brand ASC',
@@ -316,6 +316,27 @@ app.get('/api/stocks/filters/values', (req, res) => {
   });
 });
 
+// Get single stock item by ID (MUST come after specific routes)
+app.get('/api/stocks/:id', (req, res) => {
+  const { id } = req.params;
+
+  const sql = 'SELECT * FROM Inventory WHERE ItemID = ?';
+
+  connection.query(sql, [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching stock item:", err);
+      return res.status(500).json({ error: "Failed to fetch stock item" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+
 
 app.delete('/api/stocks/:id', (req, res) => {
   const itemId = req.params.id;
@@ -328,16 +349,46 @@ app.delete('/api/stocks/:id', (req, res) => {
 
 app.post('/api/stocks', (req, res) => {
 
-  const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated } = req.body;
+  const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated, imagePath } = req.body;
 
-  const sql = 'INSERT INTO Inventory (ItemName, Quantity, Brand, ItemClass, ItemType, ItemCategory, Supplier, UnitPrice, DateAdded, LastUpdated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  const sql = 'INSERT INTO Inventory (ItemName, Quantity, Brand, ItemClass, ItemType, ItemCategory, Supplier, UnitPrice, DateAdded, LastUpdated, ImagePath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
-  connection.query(sql, [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated], (err, result) => {
+  connection.query(sql, [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated, imagePath || 'placeholder.png'], (err, result) => {
 
     if (err) return res.status(500).json({ error: 'Error adding stock', details: err.message });
 
     res.status(201).json({ message: 'Stock added', id: result.insertId });
   });
+});
+
+// Update stock item
+app.put('/api/stocks/:id', (req, res) => {
+  const { id } = req.params;
+  const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice, imagePath } = req.body;
+
+  const sql = `
+    UPDATE Inventory 
+    SET ItemName = ?, Quantity = ?, Brand = ?, ItemClass = ?, ItemType = ?, 
+        ItemCategory = ?, Supplier = ?, UnitPrice = ?, ImagePath = ?, LastUpdated = NOW()
+    WHERE ItemID = ?
+  `;
+
+  connection.query(
+    sql,
+    [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, imagePath || 'placeholder.png', id],
+    (err, result) => {
+      if (err) {
+        console.error('Error updating stock:', err);
+        return res.status(500).json({ error: 'Error updating stock', details: err.message });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Stock item not found' });
+      }
+
+      res.json({ message: 'Stock updated successfully', id: id });
+    }
+  );
 });
 
 

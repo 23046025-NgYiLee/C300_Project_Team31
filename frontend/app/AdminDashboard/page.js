@@ -12,6 +12,7 @@ export default function AdminDashboard() {
     totalValue: 0,
     recentlyAdded: 0
   });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const loggedUser = JSON.parse(localStorage.getItem("user")) || { name: "Admin" };
@@ -44,6 +45,10 @@ export default function AdminDashboard() {
     window.location.href = "/";
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   // Group stocks by category or brand for warehouse-style display
   const groupedStocks = stocks.reduce((acc, stock) => {
     const category = stock.ItemCategory || 'Uncategorized';
@@ -58,6 +63,9 @@ export default function AdminDashboard() {
     <div className={styles.dashboardPage}>
       {/* Top Navigation Bar */}
       <div className={styles.topBar}>
+        <button className={styles.menuButton} onClick={toggleMobileMenu}>
+          ☰
+        </button>
         <div className={styles.brandSection}>
           <h1 className={styles.brandName}>Inventory Pro</h1>
         </div>
@@ -74,6 +82,48 @@ export default function AdminDashboard() {
             <button onClick={handleLogout} className={styles.logoutBtn}>Logout</button>
           </div>
         )}
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className={styles.mobileMenuOverlay} onClick={toggleMobileMenu}></div>
+      )}
+
+      {/* Mobile Menu */}
+      <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.active : ''}`}>
+        <div className={styles.mobileMenuHeader}>
+          <h2 className={styles.mobileMenuTitle}>Menu</h2>
+          <button className={styles.closeMenuButton} onClick={toggleMobileMenu}>
+            ×
+          </button>
+        </div>
+        <nav className={styles.sidebarNav}>
+          <Link href="/AdminDashboard" className={`${styles.navItem} ${styles.active}`} onClick={toggleMobileMenu}>
+            <span className={styles.navIcon}>📊</span>
+            Dashboard
+          </Link>
+          <Link href="/stocklist" className={styles.navItem} onClick={toggleMobileMenu}>
+            <span className={styles.navIcon}>📦</span>
+            Stock
+          </Link>
+          <Link href="/payments" className={styles.navItem} onClick={toggleMobileMenu}>
+            <span className={styles.navIcon}>💳</span>
+            Payment
+          </Link>
+          <Link href="/movement" className={styles.navItem} onClick={toggleMobileMenu}>
+            <span className={styles.navIcon}>🚚</span>
+            Movement
+          </Link>
+          <Link href="/UserRegister" className={styles.navItem} onClick={toggleMobileMenu}>
+            <span className={styles.navIcon}>👥</span>
+            User Management
+          </Link>
+          <div className={styles.navDivider} style={{ margin: "15px 0", borderTop: "1px solid #ddd" }}></div>
+          <Link href="/reports" className={styles.navItem} onClick={toggleMobileMenu}>
+            <span className={styles.navIcon}>📊</span>
+            Reports
+          </Link>
+        </nav>
       </div>
 
       <div className={styles.mainLayout}>

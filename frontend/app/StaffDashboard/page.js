@@ -12,6 +12,7 @@ export default function StaffDashboard() {
         totalValue: 0,
         recentlyAdded: 0
     });
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const loggedUser = JSON.parse(localStorage.getItem("user")) || { name: "Staff" };
@@ -44,6 +45,10 @@ export default function StaffDashboard() {
         window.location.href = "/";
     };
 
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
     // Group stocks by category or brand for warehouse-style display
     const groupedStocks = stocks.reduce((acc, stock) => {
         const category = stock.ItemCategory || 'Uncategorized';
@@ -58,6 +63,9 @@ export default function StaffDashboard() {
         <div className={styles.dashboardPage}>
             {/* Top Navigation Bar */}
             <div className={styles.topBar}>
+                <button className={styles.menuButton} onClick={toggleMobileMenu}>
+                    ☰
+                </button>
                 <div className={styles.brandSection}>
                     <h1 className={styles.brandName}>Inventory Pro - Staff</h1>
                 </div>
@@ -74,6 +82,35 @@ export default function StaffDashboard() {
                         <button onClick={handleLogout} className={styles.logoutBtn}>Logout</button>
                     </div>
                 )}
+            </div>
+
+            {/* Mobile Menu Overlay */}
+            {isMobileMenuOpen && (
+                <div className={styles.mobileMenuOverlay} onClick={toggleMobileMenu}></div>
+            )}
+
+            {/* Mobile Menu */}
+            <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.active : ''}`}>
+                <div className={styles.mobileMenuHeader}>
+                    <h2 className={styles.mobileMenuTitle}>Menu</h2>
+                    <button className={styles.closeMenuButton} onClick={toggleMobileMenu}>
+                        ×
+                    </button>
+                </div>
+                <nav className={styles.sidebarNav}>
+                    <Link href="/StaffDashboard" className={`${styles.navItem} ${styles.active}`} onClick={toggleMobileMenu}>
+                        <span className={styles.navIcon}>📊</span>
+                        Dashboard
+                    </Link>
+                    <Link href="/stocklist" className={styles.navItem} onClick={toggleMobileMenu}>
+                        <span className={styles.navIcon}>📦</span>
+                        Stock
+                    </Link>
+                    <div className={styles.navItem} onClick={toggleMobileMenu}>
+                        <span className={styles.navIcon}>📋</span>
+                        Reports
+                    </div>
+                </nav>
             </div>
 
             <div className={styles.mainLayout}>

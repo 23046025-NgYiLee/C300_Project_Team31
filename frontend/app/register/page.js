@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import emailjs from '@emailjs/browser'
-// import '../generalstyle.css'; // Import globally in app/layout.js, not in every page
+import styles from '../auth.module.css'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -58,28 +58,28 @@ export default function Register() {
 
   return (
     <>
-      <div className="page">
-        <main className="main">
-          <div className="intro">
+      <div className={styles.page}>
+        <main className={styles.main}>
+          <div className={styles.intro}>
             <h1>Create Your Account</h1>
             <p>Sign up to access all features.</p>
           </div>
 
           {/* Alerts */}
           {errors.length > 0 && (
-            <div style={{ color: 'red', marginBottom: '16px' }}>
+            <div className={styles.errorAlert}>
               {errors.map((error, i) => <p key={i}>{error}</p>)}
             </div>
           )}
           {messages.length > 0 && (
-            <div style={{ color: 'green', marginBottom: '16px' }}>
+            <div className={styles.successAlert}>
               {messages.map((msg, i) => <p key={i}>{msg}</p>)}
             </div>
           )}
 
           {/* Registration Form */}
-          <form ref={form} onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '440px' }}>
-            <div style={{ marginBottom: '16px' }}>
+          <form ref={form} onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.formGroup}>
               <label>Email:</label>
               <input
                 type="email"
@@ -87,16 +87,10 @@ export default function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  marginTop: '6px',
-                }}
+                className={styles.formInput}
               />
             </div>
-            <div style={{ marginBottom: '16px' }}>
+            <div className={styles.formGroup}>
               <label>Password:</label>
               <input
                 type="password"
@@ -104,20 +98,14 @@ export default function Register() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  marginTop: '6px',
-                }}
+                className={styles.formInput}
               />
             </div>
-            <div className="ctas">
-              <button type="submit" className="primary ctaButton">
+            <div className={styles.ctas}>
+              <button type="submit" className={`${styles.ctaButton} ${styles.primary}`}>
                 Register
               </button>
-              <a href="/login" className="secondary">
+              <a href="/login" className={`${styles.ctaButton} ${styles.secondary}`}>
                 Already have an account?
               </a>
             </div>
@@ -125,6 +113,6 @@ export default function Register() {
         </main>
       </div>
     </>
-    
+
   )
 }

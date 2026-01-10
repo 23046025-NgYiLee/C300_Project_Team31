@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import '../generalstyle.css';
+import styles from '../auth.module.css'
 
 
 
@@ -59,28 +59,28 @@ export default function PasswordChange() {
   }
 
   return (
-    <div className="page">
-      <main className="main">
-        <div className="intro">
+    <div className={styles.page}>
+      <main className={styles.main}>
+        <div className={styles.intro}>
           <h1>Reset Your Password</h1>
           <p>Enter your email and a new password to update your account.</p>
         </div>
 
         {/* Alerts */}
         {errors.length > 0 && (
-          <div style={{ color: 'red', marginBottom: '16px' }}>
+          <div className={styles.errorAlert}>
             {errors.map((error, i) => <p key={i}>{error}</p>)}
           </div>
         )}
         {messages.length > 0 && (
-          <div style={{ color: 'green', marginBottom: '16px' }}>
+          <div className={styles.successAlert}>
             {messages.map((msg, i) => <p key={i}>{msg}</p>)}
           </div>
         )}
 
         {/* Password Change Form */}
-        <form ref={form} onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '440px' }}>
-          <div style={{ marginBottom: '16px' }}>
+        <form ref={form} onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
             <label>Email:</label>
             <input
               type="email"
@@ -88,17 +88,11 @@ export default function PasswordChange() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '8px',
-                border: '1px solid #ccc',
-                marginTop: '6px',
-              }}
+              className={styles.formInput}
             />
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div className={styles.formGroup}>
             <label>New Password:</label>
             <input
               type="password"
@@ -106,17 +100,11 @@ export default function PasswordChange() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '8px',
-                border: '1px solid #ccc',
-                marginTop: '6px',
-              }}
+              className={styles.formInput}
             />
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div className={styles.formGroup}>
             <label>Confirm Password:</label>
             <input
               type="password"
@@ -124,18 +112,12 @@ export default function PasswordChange() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '8px',
-                border: '1px solid #ccc',
-                marginTop: '6px',
-              }}
+              className={styles.formInput}
             />
           </div>
 
-          <div className="ctas">
-            <button type="submit" className="primary ctaButton">
+          <div className={styles.ctas}>
+            <button type="submit" className={`${styles.ctaButton} ${styles.primary}`}>
               Change Password
             </button>
           </div>

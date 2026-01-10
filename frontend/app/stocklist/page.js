@@ -29,7 +29,8 @@ export default function StockListPage() {
     supplier: "",
     unitPrice: "",
     dateAdded: "",
-    lastUpdated: ""
+    lastUpdated: "",
+    imagePath: ""
   });
 
   // Filter options from backend
@@ -105,7 +106,8 @@ export default function StockListPage() {
           supplier: "",
           unitPrice: "",
           dateAdded: "",
-          lastUpdated: ""
+          lastUpdated: "",
+          imagePath: ""
         });
         setTimeout(() => {
           setShowModal(false);
@@ -276,9 +278,9 @@ export default function StockListPage() {
                 <div className={styles.stockImgWrap}>
                   <img
                     className={styles.stockImage}
-                    src={`/images/${stock.image}`}
-                    alt={`${stock.name} image`}
-                    onError={(e) => { e.target.src = "/images/placeholder.png" }} // Fallback image
+                    src={`http://localhost:4000/images/${stock.ImagePath || 'placeholder.png'}`}
+                    alt={`${stock.ItemName} image`}
+                    onError={(e) => { e.target.src = "http://localhost:4000/images/placeholder.png" }}
                   />
                 </div>
                 <div className={styles.stockCardBody}>
@@ -386,6 +388,23 @@ export default function StockListPage() {
                 <div className={styles.formGroup}>
                   <label htmlFor="lastUpdated">Last Updated *</label>
                   <input type="date" id="lastUpdated" name="lastUpdated" value={form.lastUpdated} onChange={handleFormChange} required />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
+                  <label htmlFor="imagePath">Image Filename (optional)</label>
+                  <input
+                    type="text"
+                    id="imagePath"
+                    name="imagePath"
+                    value={form.imagePath}
+                    onChange={handleFormChange}
+                    placeholder="e.g., shampoo.jpg (leave empty for placeholder.png)"
+                  />
+                  <small style={{ color: '#78909c', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>
+                    Enter the image filename. Make sure the image is in the backend/public/images folder.
+                  </small>
                 </div>
               </div>
 
