@@ -75,6 +75,7 @@ export default function MovementPage() {
             }
 
             // Show success message
+            //
             alert(`✓ Successfully recorded ${moveForm.type}:\n${moveForm.quantity} units of ${selectedItem.ItemName}\n${moveForm.type === 'Shipment' ? 'shipped to Customer' : `moved to ${moveForm.toLocation}`}`);
 
             // Optimistically update UI to reflect change immediately
