@@ -83,7 +83,7 @@ export default function StaffDashboard() {
                     </div>
                 )}
             </div>
-
+            {/* Mobile Menu Overlay */}
             {/* Mobile Menu Overlay */}
             {isMobileMenuOpen && (
                 <div className={styles.mobileMenuOverlay} onClick={toggleMobileMenu}></div>
