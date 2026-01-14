@@ -91,11 +91,6 @@ export default function ProductReportPage() {
               </tbody>
           </table>
         </div>
-                  <Link href="/stocktaking" className={styles.navItem}>
-          <span className={styles.navIcon}>📝</span>
-            Stock Take
-          </Link>
-
       </main>
     </div>
   );
