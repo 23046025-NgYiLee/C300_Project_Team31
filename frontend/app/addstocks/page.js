@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import Navbar from "../partials/navbar";
+import DashboardLayout from "../partials/DashboardLayout";
 
 export default function AddStocksPage() {
   const [form, setForm] = useState({
@@ -53,15 +53,13 @@ export default function AddStocksPage() {
     }
   };
 
-  return (
-    <>
-      <Navbar />
-      <div className="page">
-        <main className="main">
-          <div className="intro">
-            <h2>Add New Stocks</h2>
-            {message && <div style={{ marginBottom: "10px", color: "green" }}>{message}</div>}
-          </div>
+  const pageContent = (
+    <div className="page">
+      <main className="main">
+        <div className="intro">
+          <h2>Add New Stocks</h2>
+          {message && <div style={{ marginBottom: "10px", color: "green" }}>{message}</div>}
+        </div>
           <form onSubmit={handleSubmit} style={{ width: "100%", maxWidth: "440px" }}>
             <div style={{ marginBottom: "16px" }}>
               <label htmlFor="name">Stock Name:</label>
@@ -150,6 +148,7 @@ export default function AddStocksPage() {
           </form>
         </main>
       </div>
-    </>
   );
+
+  return <DashboardLayout activePage="addstocks">{pageContent}</DashboardLayout>;
 }
