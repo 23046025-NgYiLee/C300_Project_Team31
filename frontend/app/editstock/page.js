@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import DashboardLayout from '../partials/DashboardLayout';
 import styles from '../auth.module.css';
 import dashboardStyles from '../AdminDashboard/dashboard.module.css';
 
-export default function EditStockPage() {
+function EditStockContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const itemId = searchParams.get('id');
@@ -300,5 +301,19 @@ export default function EditStockPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function EditStockPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout activePage="stock">
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <p>Loading...</p>
+        </div>
+      </DashboardLayout>
+    }>
+      <EditStockContent />
+    </Suspense>
   );
 }
