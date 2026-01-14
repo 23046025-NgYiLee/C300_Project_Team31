@@ -291,29 +291,27 @@ export default function StockListPage() {
                     Class: {stock.ItemClass}<br />
                     Type: {stock.ItemType}<br />
                   </div>
-                  <div className={styles.stockBtnBar}>
-                    <div className="d-flex justify-content-between">
-                      <Link href={`/stocklist/detail/${stock.ItemID}`} className={styles.stockBtn}>Detail</Link>
-                    </div>
-                    <div className="d-flex justify-content-between">
-                      <button
-                        type="button"
-                        className="btn btn-dark btn-sm"
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this product?')) {
-                            fetch(`http://localhost:4000/api/stocks/${stock.ItemID}`, {
-                              method: 'DELETE'
+                  <div className={styles.actionButtons}>
+                    <Link href={`/stocklist/detail/${stock.ItemID}`} className={`${styles.actionBtn} ${styles.detailBtn}`}>
+                      <span>ℹ️</span> Detail
+                    </Link>
+                    <button
+                      type="button"
+                      className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this product?')) {
+                          fetch(`http://localhost:4000/api/stocks/${stock.ItemID}`, {
+                            method: 'DELETE'
+                          })
+                            .then(res => res.json())
+                            .then(() => {
+                              setStocks(prevStocks => prevStocks.filter(s => s.ItemID !== stock.ItemID));
                             })
-                              .then(res => res.json())
-                              .then(() => {
-                                setStocks(prevStocks => prevStocks.filter(s => s.ItemID !== stock.ItemID));
-                              })
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                        }
+                      }}
+                    >
+                      <span>🗑️</span> Delete
+                    </button>
                   </div>
                 </div>
               </div>

@@ -29,25 +29,44 @@ export default function UserRegister() {
     // Generate random password automatically
     const randomPassword = generatePassword();
 
-    // Append the generated password to the form data before sending
-    form.current.password.value = randomPassword;
+    // 1. First, register the user in the database
+    try {
+      const response = await fetch('http://localhost:4000/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: randomPassword })
+      });
 
-    // Send email via EmailJS
-    emailjs.sendForm(
-      'service_75pbn7g',
-      'template_e3gf5gt',
-      form.current,
-      'Wlqwf2LE5qFmZzMTR'
-    ).then(
-      (result) => {
-        setMessages([`Registration successful! Password has been emailed to ${email}.`]);
-        setEmail('');
-        form.current.reset();
-      },
-      (error) => {
-        setErrors(['Registration failed! Please try again.']);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
       }
-    );
+
+      // 2. If successful, send the email via EmailJS
+      // Append the generated password to the form data before sending
+      form.current.password.value = randomPassword;
+
+      emailjs.sendForm(
+        'service_75pbn7g',
+        'template_e3gf5gt',
+        form.current,
+        'Wlqwf2LE5qFmZzMTR'
+      ).then(
+        (result) => {
+          setMessages([`✓ Account created & email sent to ${email}!`]);
+          setEmail('');
+          form.current.reset();
+        },
+        (error) => {
+          console.error("EmailJS Error:", error);
+          setErrors(['Account created, but failed to send email. Please check console.']);
+        }
+      );
+
+    } catch (err) {
+      setErrors([err.message]);
+    }
   };
 
   return (

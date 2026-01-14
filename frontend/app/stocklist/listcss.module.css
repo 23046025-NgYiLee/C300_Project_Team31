@@ -689,3 +689,51 @@
     font-size: 0.9rem;
   }
 }
+
+/* Action Buttons */
+.actionButtons {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.detailBtn {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.detailBtn:hover {
+  background-color: #bbdefb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(21, 101, 192, 0.1);
+}
+
+.deleteBtn {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.deleteBtn:hover {
+  background-color: #ffcdd2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(198, 40, 40, 0.1);
+}
