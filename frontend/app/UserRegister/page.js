@@ -4,6 +4,7 @@ import emailjs from '@emailjs/browser';
 import Link from 'next/link';
 import DashboardLayout from '../partials/DashboardLayout';
 import styles from './register.module.css';
+import { API_BASE_URL } from '../config/api';
 
 export default function UserRegister() {
   const [email, setEmail] = useState('');
@@ -31,7 +32,7 @@ export default function UserRegister() {
 
     // 1. First, register the user in the database
     try {
-      const response = await fetch('http://localhost:4000/register', {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: randomPassword })

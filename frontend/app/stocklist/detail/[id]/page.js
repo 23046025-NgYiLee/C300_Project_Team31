@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import styles from './detail.module.css';
 import dashboardStyles from '../../../AdminDashboard/dashboard.module.css';
 import DashboardLayout from '../../../partials/DashboardLayout';
+import { API_BASE_URL } from '../../../config/api';
 
 export default function StockDetailPage() {
     const params = useParams();
@@ -17,7 +18,7 @@ export default function StockDetailPage() {
     useEffect(() => {
         if (!itemId) return;
 
-        fetch(`http://localhost:4000/api/stocks/${itemId}`)
+        fetch(`${API_BASE_URL}/api/stocks/${itemId}`)
             .then(res => {
                 if (!res.ok) throw new Error('Item not found');
                 return res.json();
@@ -81,10 +82,10 @@ export default function StockDetailPage() {
                     <div className={styles.imageSection}>
                         <div className={styles.imageWrapper}>
                             <img
-                                src={`http://localhost:4000/images/${item.ImagePath || 'placeholder.png'}`}
+                                src={`${API_BASE_URL}/images/${item.ImagePath || 'placeholder.png'}`}
                                 alt={item.ItemName}
                                 className={styles.productImage}
-                                onError={(e) => { e.target.src = "http://localhost:4000/images/placeholder.png" }}
+                                onError={(e) => { e.target.src = `${API_BASE_URL}/images/placeholder.png` }}
                             />
                         </div>
                     </div>
@@ -214,7 +215,7 @@ export default function StockDetailPage() {
                     <button
                         onClick={() => {
                             if (confirm('Are you sure you want to delete this item?')) {
-                                fetch(`http://localhost:4000/api/stocks/${item.ItemID}`, {
+                                fetch(`${API_BASE_URL}/api/stocks/${item.ItemID}`, {
                                     method: 'DELETE'
                                 })
                                     .then(() => router.push('/stocklist'))

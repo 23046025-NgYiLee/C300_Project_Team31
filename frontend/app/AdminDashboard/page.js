@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./dashboard.module.css";
 import Link from "next/link";
+import { API_BASE_URL } from "../config/api";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
@@ -20,7 +21,7 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/stocks')
+    fetch(`${API_BASE_URL}/api/stocks`)
       .then(res => res.json())
       .then(data => {
         setStocks(data);
