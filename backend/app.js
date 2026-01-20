@@ -2,6 +2,8 @@ const express = require('express');
 const mysql = require('mysql2');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
+require('dotenv').config();
+
 bcrypt.hash('thispassword', 10).then(console.log);
 
 bcrypt.hash('Staff123!', 10).then(console.loga);
@@ -10,10 +12,14 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const port = 4000;
+const port = process.env.PORT || 4000;
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'))
@@ -33,11 +39,11 @@ const upload = multer({ storage: storage });
 //create a database
 // Create MySQL connection
 const connection = mysql.createConnection({
-  host: '8p0w1d.h.filess.io',
-  user: 'inventory_management_thinkclay',
-  password: '39804ddb7407e460450cfae23f25551de56c0c6e',
-  database: 'inventory_management_thinkclay',
-  port: 61002
+  host: process.env.DB_HOST || '8p0w1d.h.filess.io',
+  user: process.env.DB_USER || 'inventory_management_thinkclay',
+  password: process.env.DB_PASSWORD || '39804ddb7407e460450cfae23f25551de56c0c6e',
+  database: process.env.DB_NAME || 'inventory_management_thinkclay',
+  port: process.env.DB_PORT || 61002
 });
 
 connection.connect((err) => {
