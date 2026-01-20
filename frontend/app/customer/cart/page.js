@@ -228,7 +228,14 @@ export default function CartPage() {
               <p style={{ color: "#78909c", marginBottom: "20px" }}>
                 Need more items? Browse our product catalog
               </p>
-              <Link href="/customer/shop" className={styles.newRequestBtn}>
+              <Link 
+                href="/customer/shop" 
+                className={styles.newRequestBtn}
+                style={{ 
+                  display: "inline-block",
+                  textDecoration: "none"
+                }}
+              >
                 🛍️ Browse More Products
               </Link>
             </div>
