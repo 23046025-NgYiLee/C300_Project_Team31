@@ -796,6 +796,62 @@ app.get('/api/reports/item/:itemId/csv', (req, res) => {
 });
 
 
+// ========== ORDER MANAGEMENT ENDPOINTS ==========
+
+// Create new order (for checkout)
+app.post('/api/orders', (req, res) => {
+  const { customerEmail, customerName, items, totalAmount } = req.body;
+
+  if (!customerEmail || !items || items.length === 0) {
+    return res.status(400).json({ error: 'Customer email and items are required' });
+  }
+
+  // Generate order ID
+  const orderId = `ORD-${Date.now()}`;
+  const orderDate = new Date();
+
+  // In a real application, you'd want to:
+  // 1. Store the order in an Orders table
+  // 2. Store order items in OrderItems table
+  // 3. Update inventory quantities
+  // 4. Handle transactions properly
+
+  // For now, we'll just return success with the order details
+  // You can extend this to actually store in your database
+
+  console.log('Order received:', {
+    orderId,
+    customerName,
+    customerEmail,
+    items,
+    totalAmount,
+    orderDate
+  });
+
+  // Simulate database insert success
+  res.status(201).json({
+    success: true,
+    orderId,
+    orderDate,
+    message: 'Order created successfully'
+  });
+});
+
+// Get all orders
+app.get('/api/orders', (req, res) => {
+  // This would fetch from your Orders table
+  // For now, return empty array or mock data
+  res.json([]);
+});
+
+// Get specific order
+app.get('/api/orders/:orderId', (req, res) => {
+  const { orderId } = req.params;
+  
+  // This would fetch the specific order from database
+  res.status(404).json({ error: 'Order not found' });
+});
+
 
 
 // Start server

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "../partials/DashboardLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
+import { sendShipmentNotificationEmail } from "../../utils/emailService";
 
 export default function MovementPage() {
     const [stocks, setStocks] = useState([]);
@@ -14,7 +15,11 @@ export default function MovementPage() {
         type: "Transfer", // "Transfer" or "Shipment"
         toLocation: "",
         quantity: 1,
-        notes: ""
+        notes: "",
+        customerName: "",
+        customerEmail: "",
+        trackingNumber: "",
+        sendEmail: true
     });
 
     // Fetch Data
@@ -38,7 +43,16 @@ export default function MovementPage() {
     // Handle Opening the Move Modal
     const handleOpenMove = (item) => {
         setSelectedItem(item);
-        setMoveForm({ type: "Transfer", toLocation: "", quantity: 1, notes: "" });
+        setMoveForm({ 
+            type: "Transfer", 
+            toLocation: "", 
+            quantity: 1, 
+            notes: "",
+            customerName: "",
+            customerEmail: "",
+            trackingNumber: "",
+            sendEmail: true
+        });
         setShowModal(true);
     };
 
@@ -74,9 +88,31 @@ export default function MovementPage() {
                 throw new Error(result.error || 'Failed to record movement');
             }
 
-            // Show success message
-           
-            alert(`✓ Successfully recorded ${moveForm.type}:\n${moveForm.quantity} units of ${selectedItem.ItemName}\n${moveForm.type === 'Shipment' ? 'shipped to Customer' : `moved to ${moveForm.toLocation}`}`);
+            // If this is a shipment and customer email is provided, send confirmation email
+            if (moveForm.type === 'Shipment' && moveForm.sendEmail && moveForm.customerEmail) {
+                const emailData = {
+                    customerName: moveForm.customerName || 'Valued Customer',
+                    customerEmail: moveForm.customerEmail,
+                    shipmentId: result.movementId || `SHIP-${Date.now()}`,
+                    itemName: selectedItem.ItemName,
+                    quantity: parseInt(moveForm.quantity),
+                    shipmentDate: new Date(),
+                    trackingNumber: moveForm.trackingNumber || 'Will be provided soon',
+                    estimatedDelivery: '3-5 business days',
+                    notes: moveForm.notes || ''
+                };
+
+                const emailResult = await sendShipmentNotificationEmail(emailData);
+
+                if (emailResult.success) {
+                    alert(`✓ Successfully recorded ${moveForm.type}:\n${moveForm.quantity} units of ${selectedItem.ItemName}\n${moveForm.type === 'Shipment' ? 'shipped to Customer' : `moved to ${moveForm.toLocation}`}\n\n📧 Confirmation email sent to ${moveForm.customerEmail}`);
+                } else {
+                    alert(`✓ Successfully recorded ${moveForm.type}:\n${moveForm.quantity} units of ${selectedItem.ItemName}\n${moveForm.type === 'Shipment' ? 'shipped to Customer' : `moved to ${moveForm.toLocation}`}\n\n⚠️ Note: Email notification failed to send.`);
+                }
+            } else {
+                // Show success message without email
+                alert(`✓ Successfully recorded ${moveForm.type}:\n${moveForm.quantity} units of ${selectedItem.ItemName}\n${moveForm.type === 'Shipment' ? 'shipped to Customer' : `moved to ${moveForm.toLocation}`}`);
+            }
 
             // Optimistically update UI to reflect change immediately
             const updatedStocks = stocks.map(stock => {
@@ -269,6 +305,116 @@ export default function MovementPage() {
                                     onChange={e => setMoveForm({ ...moveForm, quantity: e.target.value })}
                                 />
                             </div>
+
+                            {/* Customer Email Section for Shipments */}
+                            {moveForm.type === "Shipment" && (
+                                <>
+                                    <div style={{ 
+                                        backgroundColor: "#f0f7ff", 
+                                        padding: "16px", 
+                                        borderRadius: "8px", 
+                                        marginBottom: "20px",
+                                        border: "1px solid #d0e7ff"
+                                    }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                                            <span style={{ fontSize: "1.2rem" }}>📧</span>
+                                            <strong style={{ color: "#2c3e50" }}>Customer Email Notification</strong>
+                                        </div>
+
+                                        <div style={{ marginBottom: "16px" }}>
+                                            <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#2c3e50" }}>
+                                                Customer Name
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. John Doe"
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "12px",
+                                                    borderRadius: "8px",
+                                                    border: "1px solid #e0e0e0",
+                                                    fontSize: "0.95rem"
+                                                }}
+                                                value={moveForm.customerName}
+                                                onChange={e => setMoveForm({ ...moveForm, customerName: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div style={{ marginBottom: "16px" }}>
+                                            <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#2c3e50" }}>
+                                                Customer Email *
+                                            </label>
+                                            <input
+                                                type="email"
+                                                required
+                                                placeholder="customer@example.com"
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "12px",
+                                                    borderRadius: "8px",
+                                                    border: "1px solid #e0e0e0",
+                                                    fontSize: "0.95rem"
+                                                }}
+                                                value={moveForm.customerEmail}
+                                                onChange={e => setMoveForm({ ...moveForm, customerEmail: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div style={{ marginBottom: "16px" }}>
+                                            <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#2c3e50" }}>
+                                                Tracking Number (Optional)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. TRK123456789"
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "12px",
+                                                    borderRadius: "8px",
+                                                    border: "1px solid #e0e0e0",
+                                                    fontSize: "0.95rem"
+                                                }}
+                                                value={moveForm.trackingNumber}
+                                                onChange={e => setMoveForm({ ...moveForm, trackingNumber: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div style={{ marginBottom: "8px" }}>
+                                            <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#2c3e50" }}>
+                                                Notes (Optional)
+                                            </label>
+                                            <textarea
+                                                placeholder="Additional delivery instructions..."
+                                                rows="3"
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "12px",
+                                                    borderRadius: "8px",
+                                                    border: "1px solid #e0e0e0",
+                                                    fontSize: "0.95rem",
+                                                    fontFamily: "inherit",
+                                                    resize: "vertical"
+                                                }}
+                                                value={moveForm.notes}
+                                                onChange={e => setMoveForm({ ...moveForm, notes: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                            <input
+                                                type="checkbox"
+                                                id="sendEmail"
+                                                checked={moveForm.sendEmail}
+                                                onChange={e => setMoveForm({ ...moveForm, sendEmail: e.target.checked })}
+                                                style={{ cursor: "pointer" }}
+                                            />
+                                            <label htmlFor="sendEmail" style={{ cursor: "pointer", color: "#546e7a", fontSize: "0.9rem" }}>
+                                                Send confirmation email to customer
+                                            </label>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
 
                             <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
                                 <button
