@@ -2,8 +2,6 @@ const express = require('express');
 const mysql = require('mysql2');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
-require('dotenv').config();
-
 bcrypt.hash('thispassword', 10).then(console.log);
 
 bcrypt.hash('Staff123!', 10).then(console.loga);
