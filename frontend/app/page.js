@@ -61,12 +61,10 @@ export default function LoginPage() {
         }
 
         // Redirect based on user role
-        setTimeout(() => {
-          if (result.role === "admin") router.push("/AdminDashboard");
-          else if (result.role === "supervisor") router.push("/SupervisorDashboard");
-          else if (result.role === "staff") router.push("/StaffDashboard");
-          else router.push("/");
-        }, 500);
+        if (result.role === "admin") router.push("/AdminDashboard");
+        else if (result.role === "supervisor") router.push("/SupervisorDashboard");
+        else if (result.role === "staff") router.push("/StaffDashboard");
+        else router.push("/");
       } else {
         setErrors([result.error || "Invalid credentials."]);
         setIsLoading(false);

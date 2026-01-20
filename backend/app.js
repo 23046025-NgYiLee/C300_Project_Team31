@@ -2,10 +2,6 @@ const express = require('express');
 const mysql = require('mysql2');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
-bcrypt.hash('thispassword', 10).then(console.log);
-
-bcrypt.hash('Staff123!', 10).then(console.loga);
-
 const path = require('path');
 const cors = require('cors');
 
@@ -22,7 +18,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'))
 
-
 app.use(express.static('public'));
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -34,103 +29,76 @@ const storage = multer.diskStorage({
 })
 const upload = multer({ storage: storage });
 
-//create a database
-// Create MySQL connection
-const connection = mysql.createConnection({
+// Create MySQL connection pool for better performance
+const pool = mysql.createPool({
   host: process.env.DB_HOST || '8p0w1d.h.filess.io',
   user: process.env.DB_USER || 'inventory_management_thinkclay',
   password: process.env.DB_PASSWORD || '39804ddb7407e460450cfae23f25551de56c0c6e',
   database: process.env.DB_NAME || 'inventory_management_thinkclay',
-  port: process.env.DB_PORT || 61002
+  port: process.env.DB_PORT || 61002,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-connection.connect((err) => {
-  if (err) {
-    console.error('Error connecting to MySQL:', err);
-    return;
-  }
-  console.log('Connected to MySQL database');
+// Table creation strings
+const createOrdersTable = `
+  CREATE TABLE IF NOT EXISTS orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id VARCHAR(50) UNIQUE NOT NULL,
+    customer_name VARCHAR(255) NOT NULL,
+    customer_email VARCHAR(255) NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    order_date DATETIME NOT NULL,
+    status VARCHAR(50) DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_order_id (order_id),
+    INDEX idx_customer_email (customer_email),
+    INDEX idx_order_date (order_date)
+  )
+`;
 
-  // Create orders table if it doesn't exist 
-  const createOrdersTable = `
-    CREATE TABLE IF NOT EXISTS orders (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      order_id VARCHAR(50) UNIQUE NOT NULL,
-      customer_name VARCHAR(255) NOT NULL,
-      customer_email VARCHAR(255) NOT NULL,
-      total_amount DECIMAL(10, 2) NOT NULL,
-      order_date DATETIME NOT NULL,
-      status VARCHAR(50) DEFAULT 'Pending',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_order_id (order_id),
-      INDEX idx_customer_email (customer_email),
-      INDEX idx_order_date (order_date)
-    )
-  `;
+const createOrderItemsTable = `
+  CREATE TABLE IF NOT EXISTS order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id VARCHAR(50) NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_order_id (order_id)
+  )
+`;
 
-  const createOrderItemsTable = `
-    CREATE TABLE IF NOT EXISTS order_items (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      order_id VARCHAR(50) NOT NULL,
-      item_name VARCHAR(255) NOT NULL,
-      quantity INT NOT NULL,
-      unit_price DECIMAL(10, 2) NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_order_id (order_id)
-    )
-  `;
+// Initialize tables
+pool.query(createOrdersTable, (err) => {
+  if (err) console.error('Error creating orders table:', err);
+  else console.log('Orders table ready');
+});
 
-  connection.query(createOrdersTable, (err) => {
-    if (err) {
-      console.error('Error creating orders table:', err);
-    } else {
-      console.log('Orders table ready');
-    }
-  });
-
-  connection.query(createOrderItemsTable, (err) => {
-    if (err) {
-      console.error('Error creating order_items table:', err);
-    } else {
-      console.log('Order items table ready');
-    }
-  });
+pool.query(createOrderItemsTable, (err) => {
+  if (err) console.error('Error creating order_items table:', err);
+  else console.log('Order items table ready');
 });
 
 app.get('/', (req, res) => {
   res.send('API Server is running');
 });
 
-
 // --------- User Registration ---------
 app.post('/register', async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password)
-    return res.status(400).json({ error: 'Email and password are required' });
-
-  // Extract name from email (before @ symbol)
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
   const name = email.split('@')[0];
-
-  // Check if email already exists
-  connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
-    if (err) {
-      console.error('SELECT error:', err);
-      return res.status(500).json({ error: 'Database error', details: err.message });
-    }
+  pool.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
     if (results.length > 0) return res.status(409).json({ error: 'Email already registered' });
-
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Insert with name and default role flags
-    connection.query(
+    pool.query(
       'INSERT INTO user (name, email, password, is_admin, is_supervisor, is_staff) VALUES (?, ?, ?, 0, 0, 1)',
       [name, email, hashedPassword],
       (err, result) => {
-        if (err) {
-          console.error('INSERT error:', err);
-          return res.status(500).json({ error: 'Database error', details: err.message });
-        }
+        if (err) return res.status(500).json({ error: 'Database error', details: err.message });
         res.status(201).json({ message: 'User registered successfully', userId: result.insertId });
       }
     );
@@ -140,779 +108,245 @@ app.post('/register', async (req, res) => {
 // --------- User Login ---------
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  connection.query(
-    'SELECT * FROM user WHERE email = ?',
-    [email],
-    async (err, results) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error', details: err.message });
-      }
-      if (!results || results.length === 0) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-
-      const user = results[0];
-
-      // Compare password using bcrypt
-      const isMatch = await bcrypt.compare(password, user.password);
-
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-
-      let role = 'staff';
-      if (user.is_admin === 1 || user.is_admin === true) {
-        role = 'admin';
-      } else if (user.is_supervisor === 1 || user.is_supervisor === true) {
-        role = 'supervisor';
-      } else if (user.is_staff === 1 || user.is_staff === true) {
-        role = 'staff';
-      }
-
-
-      return res.json({
-        message: 'Login successful',
-        userId: user.user_id || user.id,
-        email: user.email,
-        role
-      });
-    }
-  );
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+  pool.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+    if (!results || results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
+    const user = results[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
+    let role = 'staff';
+    if (user.is_admin) role = 'admin';
+    else if (user.is_supervisor) role = 'supervisor';
+    return res.json({
+      message: 'Login successful',
+      userId: user.user_id || user.id,
+      email: user.email,
+      role
+    });
+  });
 });
-
-
-//app.post('/login', (req, res) => {
-//const { email, password } = req.body;
-//if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
-
-//connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
-//if (err) return res.status(500).json({ error: 'Database error', details: err.message });
-//if (results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
-
-//const user = results[0];
-//const isMatch = await bcrypt.compare(password, user.password);
-//if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
-
-//  res.json({ message: 'Login successful', userId: user.id, email: user.email });
-//  });
-//});
 
 // --------- Password Change ---------
 app.post('/change-password', async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  // Check if user exists
-  connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
-    if (err) {
-      console.error('Database error:', err);
-      return res.status(500).json({ error: 'Database error', details: err.message });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Email not found' });
-    }
-
-    // Hash the new password
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+  pool.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+    if (results.length === 0) return res.status(404).json({ error: 'Email not found' });
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Update password in database
-    connection.query(
+    pool.query(
       'UPDATE user SET password = ? WHERE email = ?',
       [hashedPassword, email],
       (updateErr, result) => {
-        if (updateErr) {
-          console.error('Update error:', updateErr);
-          return res.status(500).json({ error: 'Failed to update password', details: updateErr.message });
-        }
-
+        if (updateErr) return res.status(500).json({ error: 'Failed to update password', details: updateErr.message });
         res.json({ message: 'Password updated successfully' });
       }
     );
   });
 });
 
-
 // Get all stocks with optional search and filter parameters
 app.get('/api/stocks', (req, res) => {
   const { search, brand, class: itemClass, type, minQty, maxQty } = req.query;
-
   let sql = 'SELECT * FROM Inventory WHERE 1=1';
   const params = [];
-
-  // Search filter - searches across name, brand, class, and type
   if (search) {
     sql += ' AND (ItemName LIKE ? OR Brand LIKE ? OR ItemClass LIKE ? OR ItemType LIKE ?)';
     const searchPattern = `%${search}%`;
     params.push(searchPattern, searchPattern, searchPattern, searchPattern);
   }
-
-  // Brand filter
-  if (brand) {
-    sql += ' AND Brand = ?';
-    params.push(brand);
-  }
-
-  // Class filter
-  if (itemClass) {
-    sql += ' AND ItemClass = ?';
-    params.push(itemClass);
-  }
-
-  // Type filter
-  if (type) {
-    sql += ' AND ItemType = ?';
-    params.push(type);
-  }
-
-  // Minimum quantity filter
-  if (minQty) {
-    sql += ' AND Quantity >= ?';
-    params.push(parseInt(minQty));
-  }
-
-  // Maximum quantity filter
-  if (maxQty) {
-    sql += ' AND Quantity <= ?';
-    params.push(parseInt(maxQty));
-  }
-
+  if (brand) { sql += ' AND Brand = ?'; params.push(brand); }
+  if (itemClass) { sql += ' AND ItemClass = ?'; params.push(itemClass); }
+  if (type) { sql += ' AND ItemType = ?'; params.push(type); }
+  if (minQty) { sql += ' AND Quantity >= ?'; params.push(parseInt(minQty)); }
+  if (maxQty) { sql += ' AND Quantity <= ?'; params.push(parseInt(maxQty)); }
   sql += ' ORDER BY ItemName ASC';
-
-  connection.query(sql, params, (err, results) => {
-    if (err) {
-      console.error("Error fetching stocks:", err);
-      return res.status(500).json({ error: "Failed to fetch stocks" });
-    }
+  pool.query(sql, params, (err, results) => {
+    if (err) return res.status(500).json({ error: "Failed to fetch stocks" });
     res.json(results);
   });
 });
 
-// Get unique filter values for dropdowns (MUST come before /:id route)
+// Get unique filter values for dropdowns
 app.get('/api/stocks/filters/values', (req, res) => {
   const queries = {
     brands: 'SELECT DISTINCT Brand FROM Inventory WHERE Brand IS NOT NULL AND Brand != "" ORDER BY Brand ASC',
     classes: 'SELECT DISTINCT ItemClass FROM Inventory WHERE ItemClass IS NOT NULL AND ItemClass != "" ORDER BY ItemClass ASC',
     types: 'SELECT DISTINCT ItemType FROM Inventory WHERE ItemType IS NOT NULL AND ItemType != "" ORDER BY ItemType ASC'
   };
-
   const results = {};
   let completed = 0;
-
   Object.keys(queries).forEach(key => {
-    connection.query(queries[key], (err, data) => {
-      if (err) {
-        console.error(`Error fetching ${key}:`, err);
-        return res.status(500).json({ error: `Failed to fetch ${key}` });
-      }
-
-      // Extract values from result objects
-      if (key === 'brands') {
-        results.brands = data.map(row => row.Brand);
-      } else if (key === 'classes') {
-        results.classes = data.map(row => row.ItemClass);
-      } else if (key === 'types') {
-        results.types = data.map(row => row.ItemType);
-      }
-
+    pool.query(queries[key], (err, data) => {
+      if (err) return res.status(500).json({ error: `Failed to fetch ${key}` });
+      if (key === 'brands') results.brands = data.map(row => row.Brand);
+      else if (key === 'classes') results.classes = data.map(row => row.ItemClass);
+      else if (key === 'types') results.types = data.map(row => row.ItemType);
       completed++;
-      if (completed === Object.keys(queries).length) {
-        res.json(results);
-      }
+      if (completed === Object.keys(queries).length) res.json(results);
     });
   });
 });
 
-// Get single stock item by ID (MUST come after specific routes)
+// Get single stock item by ID
 app.get('/api/stocks/:id', (req, res) => {
   const { id } = req.params;
-
-  const sql = 'SELECT * FROM Inventory WHERE ItemID = ?';
-
-  connection.query(sql, [id], (err, results) => {
-    if (err) {
-      console.error("Error fetching stock item:", err);
-      return res.status(500).json({ error: "Failed to fetch stock item" });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: "Item not found" });
-    }
-
+  pool.query('SELECT * FROM Inventory WHERE ItemID = ?', [id], (err, results) => {
+    if (err) return res.status(500).json({ error: "Failed to fetch stock item" });
+    if (results.length === 0) return res.status(404).json({ error: "Item not found" });
     res.json(results[0]);
   });
 });
 
-
-
 app.delete('/api/stocks/:id', (req, res) => {
-  const itemId = req.params.id;
-  const sql = 'DELETE FROM Inventory WHERE ItemID = ?';
-  connection.query(sql, [itemId], (err, result) => {
+  pool.query('DELETE FROM Inventory WHERE ItemID = ?', [req.params.id], (err, result) => {
     if (err) return res.status(500).json({ error: 'Failed to delete item' });
     res.json({ message: 'Item deleted' });
   });
 });
 
-// Create new stock with image upload
-
 app.post('/api/stocks', upload.single('image'), (req, res) => {
   const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated } = req.body;
-
-  // Get the uploaded filename, or use placeholder if no file uploaded
   const imagePath = req.file ? req.file.filename : 'placeholder.png';
-
   const sql = 'INSERT INTO Inventory (ItemName, Quantity, Brand, ItemClass, ItemType, ItemCategory, Supplier, UnitPrice, DateAdded, LastUpdated, ImagePath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-
-  connection.query(sql, [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated, imagePath], (err, result) => {
+  pool.query(sql, [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated, imagePath], (err, result) => {
     if (err) return res.status(500).json({ error: 'Error adding stock', details: err.message });
     res.status(201).json({ message: 'Stock added', id: result.insertId, imagePath: imagePath });
   });
 });
 
-// Update stock item with image upload
 app.put('/api/stocks/:id', upload.single('image'), (req, res) => {
   const { id } = req.params;
   const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice } = req.body;
-
-  // Get the uploaded filename, or keep existing if no new file uploaded
   const imagePath = req.file ? req.file.filename : req.body.imagePath || 'placeholder.png';
-
-  const sql = `
-    UPDATE Inventory 
-    SET ItemName = ?, Quantity = ?, Brand = ?, ItemClass = ?, ItemType = ?, 
-        ItemCategory = ?, Supplier = ?, UnitPrice = ?, ImagePath = ?, LastUpdated = NOW()
-    WHERE ItemID = ?
-  `;
-
-  connection.query(
-    sql,
-    [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, imagePath, id],
-    (err, result) => {
-      if (err) {
-        console.error('Error updating stock:', err);
-        return res.status(500).json({ error: 'Error updating stock', details: err.message });
-      }
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Stock item not found' });
-      }
-
-      res.json({ message: 'Stock updated successfully', id: id, imagePath: imagePath });
-    }
-  );
+  const sql = `UPDATE Inventory SET ItemName = ?, Quantity = ?, Brand = ?, ItemClass = ?, ItemType = ?, ItemCategory = ?, Supplier = ?, UnitPrice = ?, ImagePath = ?, LastUpdated = NOW() WHERE ItemID = ?`;
+  pool.query(sql, [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, imagePath, id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Error updating stock', details: err.message });
+    res.json({ message: 'Stock updated successfully', id: id, imagePath: imagePath });
+  });
 });
 
-
-// ========== MOVEMENT TRACKING API ENDPOINTS ==========
-
-// Record a new movement (Transfer or Shipment)
+// Record a new movement
 app.post('/api/movements', (req, res) => {
   const { itemId, movementType, fromLocation, toLocation, quantity, movedBy, notes, productionNumber } = req.body;
-
-  // Validate required fields
-  if (!itemId || !movementType || !quantity) {
-    return res.status(400).json({ error: 'ItemID, movement type, and quantity are required' });
-  }
-
-  // First, get the current item details
-  connection.query('SELECT * FROM Inventory WHERE ItemID = ?', [itemId], (err, items) => {
-    if (err) {
-      console.error('Error fetching item:', err);
-      return res.status(500).json({ error: 'Database error', details: err.message });
-    }
-
-    if (items.length === 0) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-
+  if (!itemId || !movementType || !quantity) return res.status(400).json({ error: 'ItemID, movement type, and quantity are required' });
+  pool.query('SELECT * FROM Inventory WHERE ItemID = ?', [itemId], (err, items) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+    if (items.length === 0) return res.status(404).json({ error: 'Item not found' });
     const item = items[0];
     const currentLocation = item.Location || 'Zone A - Arrival';
-
-    // Validate quantity for shipments
-    if (movementType === 'Shipment' && quantity > item.Quantity) {
-      return res.status(400).json({ error: 'Insufficient quantity for shipment' });
-    }
-
-    // Prepare movement record
-    const movementData = {
-      fromLocation: currentLocation,
-      toLocation: movementType === 'Shipment' ? 'Customer' : toLocation,
-    };
-
-    // Insert movement history record
-    const insertMovementSql = `
-      INSERT INTO MovementHistory 
-      (ItemID, MovementType, FromLocation, ToLocation, Quantity, ProductionNumber, MovedBy, Notes) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    connection.query(
-      insertMovementSql,
-      [itemId, movementType, movementData.fromLocation, movementData.toLocation, quantity, productionNumber || null, movedBy || 'System', notes || ''],
+    if (movementType === 'Shipment' && quantity > item.Quantity) return res.status(400).json({ error: 'Insufficient quantity for shipment' });
+    const toLoc = movementType === 'Shipment' ? 'Customer' : toLocation;
+    pool.query(
+      'INSERT INTO MovementHistory (ItemID, MovementType, FromLocation, ToLocation, Quantity, ProductionNumber, MovedBy, Notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [itemId, movementType, currentLocation, toLoc, quantity, productionNumber || null, movedBy || 'System', notes || ''],
       (insertErr, insertResult) => {
-        if (insertErr) {
-          console.error('Error recording movement:', insertErr);
-          return res.status(500).json({ error: 'Failed to record movement', details: insertErr.message });
-        }
-
-        // Update the inventory based on movement type
-        let updateSql;
-        let updateParams;
-
-        if (movementType === 'Transfer') {
-          // Update location for transfer
-          updateSql = 'UPDATE Inventory SET Location = ?, LastUpdated = NOW() WHERE ItemID = ?';
-          updateParams = [toLocation, itemId];
-        } else if (movementType === 'Shipment') {
-          // Reduce quantity for shipment
-          updateSql = 'UPDATE Inventory SET Quantity = Quantity - ?, LastUpdated = NOW() WHERE ItemID = ?';
-          updateParams = [quantity, itemId];
-        }
-
-        connection.query(updateSql, updateParams, (updateErr) => {
-          if (updateErr) {
-            console.error('Error updating inventory:', updateErr);
-            return res.status(500).json({ error: 'Failed to update inventory', details: updateErr.message });
-          }
-
-          res.status(201).json({
-            message: 'Movement recorded successfully',
-            movementId: insertResult.insertId,
-            type: movementType,
-            itemId: itemId
-          });
+        if (insertErr) return res.status(500).json({ error: 'Failed to record movement', details: insertErr.message });
+        let updateSql = movementType === 'Transfer'
+          ? 'UPDATE Inventory SET Location = ?, LastUpdated = NOW() WHERE ItemID = ?'
+          : 'UPDATE Inventory SET Quantity = Quantity - ?, LastUpdated = NOW() WHERE ItemID = ?';
+        let updateParams = movementType === 'Transfer' ? [toLocation, itemId] : [quantity, itemId];
+        pool.query(updateSql, updateParams, (updateErr) => {
+          if (updateErr) return res.status(500).json({ error: 'Failed to update inventory', details: updateErr.message });
+          res.status(201).json({ message: 'Movement recorded successfully', movementId: insertResult.insertId });
         });
       }
     );
   });
 });
 
-// Get movement history for a specific item
 app.get('/api/movements/:itemId', (req, res) => {
-  const { itemId } = req.params;
-
-  const sql = `
-    SELECT 
-      m.*,
-      i.ItemName,
-      i.Brand
-    FROM MovementHistory m
-    JOIN Inventory i ON m.ItemID = i.ItemID
-    WHERE m.ItemID = ?
-    ORDER BY m.MovementDate DESC
-  `;
-
-  connection.query(sql, [itemId], (err, results) => {
-    if (err) {
-      console.error('Error fetching movement history:', err);
-      return res.status(500).json({ error: 'Failed to fetch movement history', details: err.message });
-    }
+  const sql = `SELECT m.*, i.ItemName, i.Brand FROM MovementHistory m JOIN Inventory i ON m.ItemID = i.ItemID WHERE m.ItemID = ? ORDER BY m.MovementDate DESC`;
+  pool.query(sql, [req.params.itemId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch movement history', details: err.message });
     res.json(results);
   });
 });
 
-// Get all movement history (optional - for reports)
 app.get('/api/movements', (req, res) => {
-  const sql = `
-    SELECT 
-      m.*,
-      i.ItemName,
-      i.Brand,
-      i.ItemClass
-    FROM MovementHistory m
-    JOIN Inventory i ON m.ItemID = i.ItemID
-    ORDER BY m.MovementDate DESC
-    LIMIT 100
-  `;
-
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching movements:', err);
-      return res.status(500).json({ error: 'Failed to fetch movements', details: err.message });
-    }
+  const sql = `SELECT m.*, i.ItemName, i.Brand, i.ItemClass FROM MovementHistory m JOIN Inventory i ON m.ItemID = i.ItemID ORDER BY m.MovementDate DESC LIMIT 100`;
+  pool.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch movements', details: err.message });
     res.json(results);
   });
 });
-
 
 app.post('/api/user', (req, res) => {
-
   const { name, email, password, is_staff, is_supervisor } = req.body;
-
-  const sql = 'INSERT INTO user (name, email ,password , is_staff, is_supervisor) VALUES (?, ?, ?, ?, ?)';
-
-  connection.query(sql, [name, email, password, is_staff, is_supervisor], (err, result) => {
-
+  pool.query('INSERT INTO user (name, email, password, is_staff, is_supervisor) VALUES (?, ?, ?, ?, ?)', [name, email, password, is_staff, is_supervisor], (err, result) => {
     if (err) return res.status(500).json({ error: 'Error adding staff', details: err.message });
-
     res.status(201).json({ message: 'staff added', id: result.insertId });
   });
 });
 
-
-// ========== REPORTS API ENDPOINTS ==========
-
-// Get Accounts Reports
+// Reports Endpoints
 app.get('/api/accounts_reports', (req, res) => {
-  const sql = 'SELECT * FROM Accounts_Reports ORDER BY reportDate DESC';
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching accounts reports:', err);
-      return res.status(500).json({ error: 'Failed to fetch accounts reports', details: err.message });
-    }
+  pool.query('SELECT * FROM Accounts_Reports ORDER BY reportDate DESC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch accounts reports' });
     res.json(results);
   });
 });
-
-// Get Product Reports  
 app.get('/api/product_reports', (req, res) => {
-  const sql = 'SELECT * FROM Product_Reports ORDER BY reportDate DESC';
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching product reports:', err);
-      return res.status(500).json({ error: 'Failed to fetch product reports', details: err.message });
-    }
+  pool.query('SELECT * FROM Product_Reports ORDER BY reportDate DESC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch product reports' });
     res.json(results);
   });
 });
-
-// Get Inventory Reports
 app.get('/api/inventory_reports', (req, res) => {
-  const sql = 'SELECT * FROM Inventory_Reports ORDER BY reportDate DESC';
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching inventory reports:', err);
-      return res.status(500).json({ error: 'Failed to fetch inventory reports', details: err.message });
-    }
+  pool.query('SELECT * FROM Inventory_Reports ORDER BY reportDate DESC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch inventory reports' });
     res.json(results);
   });
 });
-
-// Get Transaction Reports
 app.get('/api/transaction_reports', (req, res) => {
-  const sql = 'SELECT * FROM Transaction_Reports ORDER BY reportDate DESC';
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching transaction reports:', err);
-      return res.status(500).json({ error: 'Failed to fetch transaction reports', details: err.message });
-    }
+  pool.query('SELECT * FROM Transaction_Reports ORDER BY reportDate DESC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch transaction reports' });
     res.json(results);
   });
 });
-
-// Get Transactions
 app.get('/api/transactions', (req, res) => {
-  const sql = 'SELECT * FROM Transactions ORDER BY transactionDate DESC';
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error fetching transactions:', err);
-      return res.status(500).json({ error: 'Failed to fetch transactions', details: err.message });
-    }
+  pool.query('SELECT * FROM Transactions ORDER BY transactionDate DESC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch transactions' });
     res.json(results);
   });
 });
 
-
-// ========== REPORT GENERATION ENDPOINTS ==========
-
-// Generate individual item report
-app.get('/api/reports/item/:itemId', (req, res) => {
-  const { itemId } = req.params;
-
-  const sql = `
-    SELECT 
-      i.*,
-      COUNT(m.MovementID) as total_movements,
-      SUM(CASE WHEN m.MovementType = 'Shipment' THEN m.Quantity ELSE 0 END) as total_shipped,
-      SUM(CASE WHEN m.MovementType = 'Transfer' THEN m.Quantity ELSE 0 END) as total_transferred
-    FROM Inventory i
-    LEFT JOIN MovementHistory m ON i.ItemID = m.ItemID
-    WHERE i.ItemID = ?
-    GROUP BY i.ItemID
-  `;
-
-  connection.query(sql, [itemId], (err, results) => {
-    if (err) {
-      console.error('Error generating item report:', err);
-      return res.status(500).json({ error: 'Failed to generate item report', details: err.message });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-
-    // Get movement history for this item
-    const movementSql = `
-      SELECT * FROM MovementHistory 
-      WHERE ItemID = ? 
-      ORDER BY MovementDate DESC 
-      LIMIT 50
-    `;
-
-    connection.query(movementSql, [itemId], (movErr, movements) => {
-      if (movErr) {
-        console.error('Error fetching movements:', movErr);
-        return res.status(500).json({ error: 'Failed to fetch movement history' });
-      }
-
-      res.json({
-        item: results[0],
-        movements: movements,
-        generated_at: new Date().toISOString()
-      });
-    });
-  });
-});
-
-// Generate overall inventory report
-app.get('/api/reports/inventory/overall', (req, res) => {
-  const sql = `
-    SELECT 
-      i.*,
-      COALESCE(SUM(m.Quantity), 0) as total_movements,
-      COALESCE(COUNT(m.MovementID), 0) as movement_count
-    FROM Inventory i
-    LEFT JOIN MovementHistory m ON i.ItemID = m.ItemID
-    GROUP BY i.ItemID
-    ORDER BY i.ItemName ASC
-  `;
-
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error generating overall report:', err);
-      return res.status(500).json({ error: 'Failed to generate overall report', details: err.message });
-    }
-
-    // Calculate summary statistics
-    const summary = {
-      total_items: results.length,
-      total_quantity: results.reduce((sum, item) => sum + (item.Quantity || 0), 0),
-      total_value: results.reduce((sum, item) => sum + ((item.Quantity || 0) * (item.UnitPrice || 0)), 0),
-      low_stock_items: results.filter(item => item.Quantity < 10).length,
-      out_of_stock_items: results.filter(item => item.Quantity === 0).length,
-      by_category: {}
-    };
-
-    // Group by category
-    results.forEach(item => {
-      const category = item.ItemCategory || 'Uncategorized';
-      if (!summary.by_category[category]) {
-        summary.by_category[category] = {
-          count: 0,
-          total_quantity: 0,
-          total_value: 0
-        };
-      }
-      summary.by_category[category].count++;
-      summary.by_category[category].total_quantity += item.Quantity || 0;
-      summary.by_category[category].total_value += (item.Quantity || 0) * (item.UnitPrice || 0);
-    });
-
-    res.json({
-      summary: summary,
-      items: results,
-      generated_at: new Date().toISOString()
-    });
-  });
-});
-
-// Generate CSV export for inventory
-app.get('/api/reports/inventory/csv', (req, res) => {
-  const sql = 'SELECT * FROM Inventory ORDER BY ItemName ASC';
-
-  connection.query(sql, (err, results) => {
-    if (err) {
-      console.error('Error generating CSV:', err);
-      return res.status(500).json({ error: 'Failed to generate CSV', details: err.message });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).send('No data available');
-    }
-
-    // Create CSV headers
-    const headers = Object.keys(results[0]).join(',');
-
-    // Create CSV rows
-    const rows = results.map(row => {
-      return Object.values(row).map(value => {
-        // Handle null values and escape commas
-        if (value === null) return '';
-        if (typeof value === 'string' && value.includes(',')) {
-          return `"${value}"`;
-        }
-        return value;
-      }).join(',');
-    });
-
-    const csv = [headers, ...rows].join('\n');
-
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="inventory_report_${Date.now()}.csv"`);
-    res.send(csv);
-  });
-});
-
-// Generate individual item CSV
-app.get('/api/reports/item/:itemId/csv', (req, res) => {
-  const { itemId } = req.params;
-
-  const sql = `
-    SELECT 
-      i.*,
-      m.MovementType,
-      m.FromLocation,
-      m.ToLocation,
-      m.Quantity as MovementQuantity,
-      m.MovedBy,
-      m.MovementDate,
-      m.Notes
-    FROM Inventory i
-    LEFT JOIN MovementHistory m ON i.ItemID = m.ItemID
-    WHERE i.ItemID = ?
-    ORDER BY m.MovementDate DESC
-  `;
-
-  connection.query(sql, [itemId], (err, results) => {
-    if (err) {
-      console.error('Error generating item CSV:', err);
-      return res.status(500).json({ error: 'Failed to generate CSV', details: err.message });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).send('Item not found');
-    }
-
-    // Create CSV headers
-    const headers = Object.keys(results[0]).join(',');
-
-    // Create CSV rows
-    const rows = results.map(row => {
-      return Object.values(row).map(value => {
-        if (value === null) return '';
-        if (typeof value === 'string' && value.includes(',')) {
-          return `"${value}"`;
-        }
-        return value;
-      }).join(',');
-    });
-
-    const csv = [headers, ...rows].join('\n');
-    const itemName = results[0].ItemName.replace(/[^a-z0-9]/gi, '_');
-
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${itemName}_report_${Date.now()}.csv"`);
-    res.send(csv);
-  });
-});
-
-
-// ========== ORDER MANAGEMENT ENDPOINTS ==========
-
-// Create new order (for checkout)
+// Orders Endpoints
 app.post('/api/orders', (req, res) => {
-  const { customerEmail, customerName, items, totalAmount, productionNumber } = req.body;
-
-  if (!customerEmail || !items || items.length === 0) {
-    return res.status(400).json({ error: 'Customer email and items are required' });
-  }
-
-  // Generate order ID
+  const { customerEmail, customerName, items, totalAmount } = req.body;
+  if (!customerEmail || !items || items.length === 0) return res.status(400).json({ error: 'Email and items are required' });
   const orderId = `ORD-${Date.now()}`;
-  const orderDate = new Date();
-
-  // Store the order in database
-  const orderQuery = `
-    INSERT INTO orders (order_id, customer_name, customer_email, total_amount, order_date, status)
-    VALUES (?, ?, ?, ?, ?, 'Confirmed')
-  `;
-
-  connection.query(
-    orderQuery,
-    [orderId, customerName, customerEmail, totalAmount, orderDate],
-    (err, orderResult) => {
-      if (err) {
-        console.error('Error inserting order:', err);
-        return res.status(500).json({ error: 'Failed to create order' });
-      }
-
-      // Store order items
-      const itemsQuery = `
-        INSERT INTO order_items (order_id, item_name, quantity, unit_price)
-        VALUES ?
-      `;
-
-      const itemsValues = items.map(item => [
-        orderId,
-        item.ItemName || item.name,
-        item.quantity,
-        parseFloat(item.UnitPrice || item.price || 0)
-      ]);
-
-      connection.query(itemsQuery, [itemsValues], (itemErr) => {
-        if (itemErr) {
-          console.error('Error inserting order items:', itemErr);
-          // Order is already created, so we'll continue
-        }
-
-        console.log('Order created successfully:', orderId);
-
-        res.status(201).json({
-          success: true,
-          orderId,
-          orderDate,
-          message: 'Order created successfully'
-        });
+  pool.query(
+    'INSERT INTO orders (order_id, customer_name, customer_email, total_amount, order_date, status) VALUES (?, ?, ?, ?, NOW(), "Confirmed")',
+    [orderId, customerName, customerEmail, totalAmount],
+    (err) => {
+      if (err) return res.status(500).json({ error: 'Failed to create order' });
+      const itemsValues = items.map(item => [orderId, item.ItemName || item.name, item.quantity, parseFloat(item.UnitPrice || item.price || 0)]);
+      pool.query('INSERT INTO order_items (order_id, item_name, quantity, unit_price) VALUES ?', [itemsValues], (itemErr) => {
+        if (itemErr) console.error('Error inserting order items:', itemErr);
+        res.status(201).json({ message: 'Order created', orderId });
       });
     }
   );
 });
 
-// Get all orders (for admin payments page)
 app.get('/api/orders', (req, res) => {
-  const query = `
-    SELECT 
-      o.order_id,
-      o.customer_name,
-      o.customer_email,
-      o.total_amount,
-      o.order_date,
-      o.status,
-      GROUP_CONCAT(CONCAT(oi.item_name, ' (', oi.quantity, ')') SEPARATOR ', ') as items
-    FROM orders o
-    LEFT JOIN order_items oi ON o.order_id = oi.order_id
-    GROUP BY o.order_id
-    ORDER BY o.order_date DESC
-  `;
-
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching orders:', err);
-      return res.status(500).json({ error: 'Failed to fetch orders' });
-    }
+  pool.query('SELECT o.*, COUNT(oi.id) as item_count FROM orders o LEFT JOIN order_items oi ON o.order_id = oi.order_id GROUP BY o.order_id ORDER BY o.order_date DESC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch orders' });
     res.json(results);
   });
 });
 
-// Get specific order
 app.get('/api/orders/:orderId', (req, res) => {
-  const { orderId } = req.params;
-
-  // This would fetch the specific order from database
-  res.status(404).json({ error: 'Order not found' });
+  pool.query('SELECT * FROM orders WHERE order_id = ?', [req.params.orderId], (err, orders) => {
+    if (err || orders.length === 0) return res.status(404).json({ error: 'Order not found' });
+    pool.query('SELECT * FROM order_items WHERE order_id = ?', [req.params.orderId], (err, items) => {
+      res.json({ ...orders[0], items });
+    });
+  });
 });
 
-
-
-// Start server
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
