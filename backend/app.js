@@ -46,7 +46,7 @@ connection.connect((err) => {
     return;
   }
   console.log('Connected to MySQL database');
-  
+
   // Create orders table if it doesn't exist
   const createOrdersTable = `
     CREATE TABLE IF NOT EXISTS orders (
@@ -63,7 +63,7 @@ connection.connect((err) => {
       INDEX idx_order_date (order_date)
     )
   `;
-  
+
   const createOrderItemsTable = `
     CREATE TABLE IF NOT EXISTS order_items (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -75,7 +75,7 @@ connection.connect((err) => {
       INDEX idx_order_id (order_id)
     )
   `;
-  
+
   connection.query(createOrdersTable, (err) => {
     if (err) {
       console.error('Error creating orders table:', err);
@@ -83,7 +83,7 @@ connection.connect((err) => {
       console.log('Orders table ready');
     }
   });
-  
+
   connection.query(createOrderItemsTable, (err) => {
     if (err) {
       console.error('Error creating order_items table:', err);
@@ -357,24 +357,29 @@ app.delete('/api/stocks/:id', (req, res) => {
   });
 });
 
-app.post('/api/stocks', (req, res) => {
+// Create new stock with image upload
 
-  const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated, imagePath } = req.body;
+app.post('/api/stocks', upload.single('image'), (req, res) => {
+  const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated } = req.body;
+
+  // Get the uploaded filename, or use placeholder if no file uploaded
+  const imagePath = req.file ? req.file.filename : 'placeholder.png';
 
   const sql = 'INSERT INTO Inventory (ItemName, Quantity, Brand, ItemClass, ItemType, ItemCategory, Supplier, UnitPrice, DateAdded, LastUpdated, ImagePath) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
-  connection.query(sql, [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated, imagePath || 'placeholder.png'], (err, result) => {
-
+  connection.query(sql, [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, dateAdded, lastUpdated, imagePath], (err, result) => {
     if (err) return res.status(500).json({ error: 'Error adding stock', details: err.message });
-
-    res.status(201).json({ message: 'Stock added', id: result.insertId });
+    res.status(201).json({ message: 'Stock added', id: result.insertId, imagePath: imagePath });
   });
 });
 
-// Update stock item
-app.put('/api/stocks/:id', (req, res) => {
+// Update stock item with image upload
+app.put('/api/stocks/:id', upload.single('image'), (req, res) => {
   const { id } = req.params;
-  const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice, imagePath } = req.body;
+  const { name, quantity, brand, ItemClass, type, category, supplier, unitPrice } = req.body;
+
+  // Get the uploaded filename, or keep existing if no new file uploaded
+  const imagePath = req.file ? req.file.filename : req.body.imagePath || 'placeholder.png';
 
   const sql = `
     UPDATE Inventory 
@@ -385,7 +390,7 @@ app.put('/api/stocks/:id', (req, res) => {
 
   connection.query(
     sql,
-    [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, imagePath || 'placeholder.png', id],
+    [name, quantity, brand, ItemClass, type, category, supplier, unitPrice, imagePath, id],
     (err, result) => {
       if (err) {
         console.error('Error updating stock:', err);
@@ -396,7 +401,7 @@ app.put('/api/stocks/:id', (req, res) => {
         return res.status(404).json({ error: 'Stock item not found' });
       }
 
-      res.json({ message: 'Stock updated successfully', id: id });
+      res.json({ message: 'Stock updated successfully', id: id, imagePath: imagePath });
     }
   );
 });
@@ -406,7 +411,7 @@ app.put('/api/stocks/:id', (req, res) => {
 
 // Record a new movement (Transfer or Shipment)
 app.post('/api/movements', (req, res) => {
-  const { itemId, movementType, fromLocation, toLocation, quantity, movedBy, notes } = req.body;
+  const { itemId, movementType, fromLocation, toLocation, quantity, movedBy, notes, productionNumber } = req.body;
 
   // Validate required fields
   if (!itemId || !movementType || !quantity) {
@@ -441,13 +446,13 @@ app.post('/api/movements', (req, res) => {
     // Insert movement history record
     const insertMovementSql = `
       INSERT INTO MovementHistory 
-      (ItemID, MovementType, FromLocation, ToLocation, Quantity, MovedBy, Notes) 
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (ItemID, MovementType, FromLocation, ToLocation, Quantity, ProductionNumber, MovedBy, Notes) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     connection.query(
       insertMovementSql,
-      [itemId, movementType, movementData.fromLocation, movementData.toLocation, quantity, movedBy || 'System', notes || ''],
+      [itemId, movementType, movementData.fromLocation, movementData.toLocation, quantity, productionNumber || null, movedBy || 'System', notes || ''],
       (insertErr, insertResult) => {
         if (insertErr) {
           console.error('Error recording movement:', insertErr);
@@ -822,13 +827,13 @@ app.post('/api/orders', (req, res) => {
 
   // Store the order in database
   const orderQuery = `
-    INSERT INTO orders (order_id, customer_name, customer_email, total_amount, order_date, status)
-    VALUES (?, ?, ?, ?, ?, 'Confirmed')
+    INSERT INTO orders (order_id, customer_name, customer_email, total_amount, production_number, order_date, status)
+    VALUES (?, ?, ?, ?, ?, ?, 'Confirmed')
   `;
 
   connection.query(
     orderQuery,
-    [orderId, customerName, customerEmail, totalAmount, orderDate],
+    [orderId, customerName, customerEmail, totalAmount, productionNumber || null, orderDate],
     (err, orderResult) => {
       if (err) {
         console.error('Error inserting order:', err);
@@ -837,7 +842,7 @@ app.post('/api/orders', (req, res) => {
 
       // Store order items
       const itemsQuery = `
-        INSERT INTO order_items (order_id, item_name, quantity, unit_price)
+        INSERT INTO order_items (order_id, item_name, quantity, unit_price, production_number)
         VALUES ?
       `;
 
@@ -845,7 +850,8 @@ app.post('/api/orders', (req, res) => {
         orderId,
         item.ItemName || item.name,
         item.quantity,
-        parseFloat(item.UnitPrice || item.price || 0)
+        parseFloat(item.UnitPrice || item.price || 0),
+        productionNumber || null
       ]);
 
       connection.query(itemsQuery, [itemsValues], (itemErr) => {

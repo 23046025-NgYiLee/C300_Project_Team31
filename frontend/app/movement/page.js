@@ -12,13 +12,14 @@ export default function MovementPage() {
     const [showModal, setShowModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [moveForm, setMoveForm] = useState({
-        type: "Transfer", // "Transfer" or "Shipment"
+        type: "Transfer",
         toLocation: "",
         quantity: 1,
         notes: "",
         customerName: "",
         customerEmail: "",
         trackingNumber: "",
+        productionNumber: "",
         sendEmail: true
     });
 
@@ -43,14 +44,15 @@ export default function MovementPage() {
     // Handle Opening the Move Modal
     const handleOpenMove = (item) => {
         setSelectedItem(item);
-        setMoveForm({ 
-            type: "Transfer", 
-            toLocation: "", 
-            quantity: 1, 
+        setMoveForm({
+            type: "Transfer",
+            toLocation: "",
+            quantity: 1,
             notes: "",
             customerName: "",
             customerEmail: "",
             trackingNumber: "",
+            productionNumber: "",
             sendEmail: true
         });
         setShowModal(true);
@@ -72,7 +74,8 @@ export default function MovementPage() {
                 toLocation: moveForm.toLocation,
                 quantity: parseInt(moveForm.quantity),
                 movedBy: movedBy,
-                notes: moveForm.notes || ''
+                notes: moveForm.notes || '',
+                productionNumber: moveForm.productionNumber || null
             };
 
             // Call the backend API to record the movement
@@ -306,13 +309,39 @@ export default function MovementPage() {
                                 />
                             </div>
 
+                            {/* Production Number Field */}
+                            <div style={{ marginBottom: "20px" }}>
+                                <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#2c3e50" }}>
+                                    Production/Batch Number {moveForm.type === "Shipment" ? "*" : "(Optional)"}
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder={`e.g. ${moveForm.type === "Shipment" ? "OUT" : "TRF"}-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-001`}
+                                    style={{
+                                        width: "100%",
+                                        padding: "12px",
+                                        borderRadius: "8px",
+                                        border: "1px solid #e0e0e0",
+                                        fontSize: "0.95rem"
+                                    }}
+                                    value={moveForm.productionNumber}
+                                    onChange={e => setMoveForm({ ...moveForm, productionNumber: e.target.value })}
+                                    required={moveForm.type === "Shipment"}
+                                />
+                                <small style={{ color: "#78909c", fontSize: "0.85rem", display: "block", marginTop: "4px" }}>
+                                    {moveForm.type === "Shipment" ?
+                                        "📦 Outbound production number required for shipments" :
+                                        "🔄 Track this movement batch for reporting"}
+                                </small>
+                            </div>
+
                             {/* Customer Email Section for Shipments */}
                             {moveForm.type === "Shipment" && (
                                 <>
-                                    <div style={{ 
-                                        backgroundColor: "#f0f7ff", 
-                                        padding: "16px", 
-                                        borderRadius: "8px", 
+                                    <div style={{
+                                        backgroundColor: "#f0f7ff",
+                                        padding: "16px",
+                                        borderRadius: "8px",
                                         marginBottom: "20px",
                                         border: "1px solid #d0e7ff"
                                     }}>

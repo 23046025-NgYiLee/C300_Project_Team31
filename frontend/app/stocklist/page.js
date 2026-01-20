@@ -30,7 +30,7 @@ export default function StockListPage() {
     unitPrice: "",
     dateAdded: "",
     lastUpdated: "",
-    imagePath: ""
+    imageFile: null
   });
 
   // Filter options from backend
@@ -88,10 +88,27 @@ export default function StockListPage() {
     e.preventDefault();
     setFormMessage("");
     try {
+      // Create FormData to handle file upload
+      const formData = new FormData();
+      formData.append('name', form.name);
+      formData.append('quantity', form.quantity);
+      formData.append('brand', form.brand);
+      formData.append('ItemClass', form.ItemClass);
+      formData.append('type', form.type);
+      formData.append('category', form.category);
+      formData.append('supplier', form.supplier);
+      formData.append('unitPrice', form.unitPrice);
+      formData.append('dateAdded', form.dateAdded);
+      formData.append('lastUpdated', form.lastUpdated);
+
+      // Append image file if selected
+      if (form.imageFile) {
+        formData.append('image', form.imageFile);
+      }
+
       const res = await fetch("http://localhost:4000/api/stocks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
+        body: formData // Don't set Content-Type header, browser will set it with boundary
       });
       const data = await res.json();
       if (res.ok) {
@@ -107,7 +124,7 @@ export default function StockListPage() {
           unitPrice: "",
           dateAdded: "",
           lastUpdated: "",
-          imagePath: ""
+          imageFile: null
         });
         setTimeout(() => {
           setShowModal(false);
@@ -391,18 +408,28 @@ export default function StockListPage() {
 
               <div className={styles.formRow}>
                 <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                  <label htmlFor="imagePath">Image Filename (optional)</label>
+                  <label htmlFor="imageFile">Product Image</label>
                   <input
-                    type="text"
-                    id="imagePath"
-                    name="imagePath"
-                    value={form.imagePath}
-                    onChange={handleFormChange}
-                    placeholder="e.g., shampoo.jpg (leave empty for placeholder.png)"
+                    type="file"
+                    id="imageFile"
+                    name="imageFile"
+                    accept="image/*"
+                    onChange={(e) => setForm({ ...form, imageFile: e.target.files[0] })}
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      borderRadius: "4px",
+                      cursor: "pointer"
+                    }}
                   />
                   <small style={{ color: '#78909c', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>
-                    Enter the image filename. Make sure the image is in the backend/public/images folder.
+                    Upload product image (JPG, PNG, etc.). Max size: 5MB
                   </small>
+                  {form.imageFile && (
+                    <div style={{ marginTop: "8px", color: "#4caf50", fontSize: "0.9rem" }}>
+                      ✓ Selected: {form.imageFile.name}
+                    </div>
+                  )}
                 </div>
               </div>
 

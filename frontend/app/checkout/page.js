@@ -8,9 +8,10 @@ import { getCart, getCartTotal, clearCart } from "../../utils/cartUtils";
 export default function CheckoutPage() {
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [productionNumber, setProductionNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  
+
   // Use cart items instead of demo items
   const [cart, setCart] = useState([]);
 
@@ -18,7 +19,7 @@ export default function CheckoutPage() {
     // Load cart items
     const cartItems = getCart();
     setCart(cartItems);
-    
+
     // Load customer info if available
     const customer = JSON.parse(localStorage.getItem("customer"));
     if (customer && customer.name && customer.name !== "Guest") {
@@ -61,7 +62,8 @@ export default function CheckoutPage() {
           customerEmail,
           customerName,
           items: cart,
-          totalAmount: calculateTotal()
+          totalAmount: calculateTotal(),
+          productionNumber: productionNumber || null
         })
       });
 
@@ -96,7 +98,7 @@ export default function CheckoutPage() {
         window.dispatchEvent(new Event('cartUpdated'));
         setCustomerEmail('');
         setCustomerName('');
-        
+
         // Redirect to orders page after 3 seconds
         setTimeout(() => {
           window.location.href = '/customer/orders';
@@ -123,7 +125,7 @@ export default function CheckoutPage() {
         {/* Cart Summary */}
         <div className={styles.activityCard} style={{ marginBottom: "24px" }}>
           <h3 className={styles.cardTitle}>Order Summary</h3>
-          
+
           {cart.length > 0 ? (
             <>
               <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "16px" }}>
@@ -170,7 +172,7 @@ export default function CheckoutPage() {
         {cart.length > 0 && (
           <div className={styles.activityCard}>
             <h3 className={styles.cardTitle}>Customer Information</h3>
-            
+
             {message && (
               <div style={{
                 padding: "12px",
@@ -228,10 +230,32 @@ export default function CheckoutPage() {
                 </small>
               </div>
 
-              <div style={{ 
-                backgroundColor: "#f0f7ff", 
-                padding: "16px", 
-                borderRadius: "8px", 
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#2c3e50" }}>
+                  Production/Batch Number (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder={`e.g. IN-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-001`}
+                  value={productionNumber}
+                  onChange={(e) => setProductionNumber(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    border: "1px solid #e0e0e0",
+                    fontSize: "0.95rem"
+                  }}
+                />
+                <small style={{ color: "#78909c", fontSize: "0.85rem" }}>
+                  📦 Inbound production number for inventory tracking
+                </small>
+              </div>
+
+              <div style={{
+                backgroundColor: "#f0f7ff",
+                padding: "16px",
+                borderRadius: "8px",
                 marginBottom: "20px",
                 border: "1px solid #d0e7ff"
               }}>
@@ -244,8 +268,8 @@ export default function CheckoutPage() {
                 type="submit"
                 disabled={loading}
                 className={styles.newRequestBtn}
-                style={{ 
-                  width: "100%", 
+                style={{
+                  width: "100%",
                   padding: "14px",
                   fontSize: "1rem",
                   opacity: loading ? 0.6 : 1,

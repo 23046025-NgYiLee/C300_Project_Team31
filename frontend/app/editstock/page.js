@@ -23,7 +23,8 @@ function EditStockContent() {
     category: '',
     supplier: '',
     unitPrice: '',
-    imagePath: ''
+    imagePath: '',
+    imageFile: null
   });
 
   // Fetch item data
@@ -72,20 +73,30 @@ function EditStockContent() {
     setSuccess('');
 
     try {
+      // Create FormData to handle file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('quantity', formData.quantity);
+      formDataToSend.append('brand', formData.brand);
+      formDataToSend.append('ItemClass', formData.ItemClass);
+      formDataToSend.append('type', formData.type);
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('supplier', formData.supplier);
+      formDataToSend.append('unitPrice', formData.unitPrice);
+
+      // Include existing imagePath if no new file
+      if (!formData.imageFile) {
+        formDataToSend.append('imagePath', formData.imagePath);
+      }
+
+      // Append image file if selected
+      if (formData.imageFile) {
+        formDataToSend.append('image', formData.imageFile);
+      }
+
       const res = await fetch(`http://localhost:4000/api/stocks/${itemId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          quantity: formData.quantity,
-          brand: formData.brand,
-          ItemClass: formData.ItemClass,
-          type: formData.type,
-          category: formData.category,
-          supplier: formData.supplier,
-          unitPrice: formData.unitPrice,
-          imagePath: formData.imagePath
-        })
+        body: formDataToSend
       });
 
       if (!res.ok) {
@@ -270,18 +281,28 @@ function EditStockContent() {
               </div>
 
               <div className={styles.formGroup} style={{ gridColumn: '1 / -1' }}>
-                <label>Image Filename (optional)</label>
+                <label>Product Image</label>
                 <input
-                  type="text"
-                  name="imagePath"
-                  value={formData.imagePath}
-                  onChange={handleChange}
-                  placeholder="e.g., product.jpg"
+                  type="file"
+                  id="imageFile"
+                  accept="image/*"
+                  onChange={(e) => setFormData({ ...formData, imageFile: e.target.files[0] })}
                   className={styles.formInput}
+                  style={{
+                    padding: "8px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
                 />
                 <small style={{ color: '#78909c', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>
-                  Image should be in backend/public/images folder
+                  Upload new image (JPG, PNG, etc.) or keep existing: {formData.imagePath}
                 </small>
+                {formData.imageFile && (
+                  <div style={{ marginTop: "8px", color: "#4caf50", fontSize: "0.9rem" }}>
+                    ✓ New image selected: {formData.imageFile.name}
+                  </div>
+                )}
               </div>
             </div>
 
