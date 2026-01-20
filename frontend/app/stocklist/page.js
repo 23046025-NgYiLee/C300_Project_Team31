@@ -6,6 +6,7 @@ import DashboardLayout from "../partials/DashboardLayout";
 // Ensure these CSS modules exist at these paths
 import styles from "./listcss.module.css";
 import dashboardStyles from "../AdminDashboard/dashboard.module.css";
+import { API_BASE_URL } from "../config/api";
 
 export default function StockListPage() {
   const [stocks, setStocks] = useState([]);
