@@ -151,79 +151,43 @@ app.post('/login', (req, res) => {
 //  });
 //});
 
-app.post("/forgot-password", (req, res) => {
-  const { email } = req.body;
+// --------- Password Change ---------
+app.post('/change-password', async (req, res) => {
+  const { email, password } = req.body;
 
-  db.query("SELECT * FROM user WHERE email = ?", [email], (err, results) => {
-    if (err) return res.status(500).json({ error: "Database error" });
-    if (results.length === 0)
-      return res.status(404).json({ error: "Email not found" });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
 
-    // Generate secure random token
-    const token = crypto.randomBytes(32).toString("hex");
-    const expireTime = new Date(Date.now() + 3600000);
+  // Check if user exists
+  connection.query('SELECT * FROM user WHERE email = ?', [email], async (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: 'Database error', details: err.message });
+    }
 
-    // Store token in DB
-    db.query(
-      "UPDATE user SET reset_token = ?, reset_expires = ? WHERE email = ?",
-      [token, expireTime, email],
-      (updateErr) => {
-        if (updateErr)
-          return res.status(500).json({ error: "Failed to save token" });
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Email not found' });
+    }
 
-        // Send email
-        const resetLink = `http://localhost:3000/reset-password/${token}`;
-        const mailOptions = {
-          from: "youremail@outlook.com",
-          to: email,
-          subject: "Password Reset Request",
-          html: `
-            <h2>Password Reset</h2>
-            <p>Click the link below to reset your password:</p>
-            <a href="${resetLink}">${resetLink}</a>
-            <p>This link will expire in 1 hour.</p>
-          `,
-        };
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        transporter.sendMail(mailOptions, (emailErr) => {
-          if (emailErr)
-            return res.status(500).json({ error: "Failed to send email" });
+    // Update password in database
+    connection.query(
+      'UPDATE user SET password = ? WHERE email = ?',
+      [hashedPassword, email],
+      (updateErr, result) => {
+        if (updateErr) {
+          console.error('Update error:', updateErr);
+          return res.status(500).json({ error: 'Failed to update password', details: updateErr.message });
+        }
 
-          res.json({ message: "Password reset link sent to your email." });
-        });
+        res.json({ message: 'Password updated successfully' });
       }
     );
   });
 });
-
-// Handle password reset submission
-app.post("/reset-password/:token", (req, res) => {
-  const { token } = req.params;
-  const { newPassword } = req.body;
-
-  db.query(
-    "SELECT * FROM user WHERE reset_token = ? AND reset_expires > NOW()",
-    [token],
-    async (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error" });
-      if (results.length === 0)
-        return res.status(400).json({ error: "Invalid or expired token" });
-
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      db.query(
-        "UPDATE user SET password = ?, reset_token = NULL, reset_expires = NULL WHERE reset_token = ?",
-        [hashedPassword, token],
-        (updateErr) => {
-          if (updateErr)
-            return res.status(500).json({ error: "Failed to update password" });
-          res.json({ message: "Password updated successfully." });
-        }
-      );
-    }
-  );
-});
-
 
 
 // Get all stocks with optional search and filter parameters
