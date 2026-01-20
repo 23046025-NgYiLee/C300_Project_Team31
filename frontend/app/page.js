@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
+import { API_BASE_URL } from "../config/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
