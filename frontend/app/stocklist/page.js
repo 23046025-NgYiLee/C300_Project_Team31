@@ -42,7 +42,7 @@ export default function StockListPage() {
 
   // Fetch filter options on mount
   useEffect(() => {
-    fetch('http://localhost:4000/api/stocks/filters/values')
+    fetch(`${API_BASE_URL}/api/stocks/filters/values`)
       .then(res => res.json())
       .then(data => setFilterOptions(data))
       .catch(err => console.error('Error fetching filter options:', err));
@@ -60,7 +60,7 @@ export default function StockListPage() {
     if (maxQuantity) params.append('maxQty', maxQuantity);
 
     const queryString = params.toString();
-    const url = `http://localhost:4000/api/stocks${queryString ? '?' + queryString : ''}`;
+    const url = `${API_BASE_URL}/api/stocks${queryString ? '?' + queryString : ''}`;
 
     fetch(url)
       .then(res => res.json())
@@ -106,7 +106,7 @@ export default function StockListPage() {
         formData.append('image', form.imageFile);
       }
 
-      const res = await fetch("http://localhost:4000/api/stocks", {
+      const res = await fetch(`${API_BASE_URL}/api/stocks`, {
         method: "POST",
         body: formData // Don't set Content-Type header, browser will set it with boundary
       });
@@ -167,7 +167,7 @@ export default function StockListPage() {
           <button
             onClick={() => {
               // Download overall inventory report as CSV
-              window.open('http://localhost:4000/api/reports/inventory/csv', '_blank');
+              window.open(`${API_BASE_URL}/api/reports/inventory/csv`, '_blank');
             }}
             className={dashboardStyles.newRequestBtn}
             style={{ backgroundColor: "#27ae60" }}
@@ -295,9 +295,9 @@ export default function StockListPage() {
                 <div className={styles.stockImgWrap}>
                   <img
                     className={styles.stockImage}
-                    src={`http://localhost:4000/images/${stock.ImagePath || 'placeholder.png'}`}
+                    src={`${API_BASE_URL}/images/${stock.ImagePath || 'placeholder.png'}`}
                     alt={`${stock.ItemName} image`}
-                    onError={(e) => { e.target.src = "http://localhost:4000/images/placeholder.png" }}
+                    onError={(e) => { e.target.src = `${API_BASE_URL}/images/placeholder.png` }}
                   />
                 </div>
                 <div className={styles.stockCardBody}>
@@ -317,7 +317,7 @@ export default function StockListPage() {
                       className={`${styles.actionBtn} ${styles.deleteBtn}`}
                       onClick={() => {
                         if (window.confirm('Are you sure you want to delete this product?')) {
-                          fetch(`http://localhost:4000/api/stocks/${stock.ItemID}`, {
+                          fetch(`${API_BASE_URL}/api/stocks/${stock.ItemID}`, {
                             method: 'DELETE'
                           })
                             .then(res => res.json())

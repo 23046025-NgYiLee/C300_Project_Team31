@@ -31,7 +31,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:4000/login", {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -196,9 +196,9 @@ export default function LoginPage() {
 
           <div className={styles.formFooter}>
             <p>Need help? Contact your administrator</p>
-            <div style={{ 
-              marginTop: "20px", 
-              padding: "16px", 
+            <div style={{
+              marginTop: "20px",
+              padding: "16px",
               backgroundColor: "#f0f7ff",
               borderRadius: "8px",
               border: "1px solid #d0e7ff",
