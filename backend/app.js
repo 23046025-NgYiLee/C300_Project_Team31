@@ -51,7 +51,7 @@ connection.connect((err) => {
   }
   console.log('Connected to MySQL database');
 
-  // Create orders table if it doesn't exist
+  // Create orders table if it doesn't exist 
   const createOrdersTable = `
     CREATE TABLE IF NOT EXISTS orders (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -819,7 +819,7 @@ app.get('/api/reports/item/:itemId/csv', (req, res) => {
 
 // Create new order (for checkout)
 app.post('/api/orders', (req, res) => {
-  const { customerEmail, customerName, items, totalAmount } = req.body;
+  const { customerEmail, customerName, items, totalAmount, productionNumber } = req.body;
 
   if (!customerEmail || !items || items.length === 0) {
     return res.status(400).json({ error: 'Customer email and items are required' });
@@ -831,13 +831,13 @@ app.post('/api/orders', (req, res) => {
 
   // Store the order in database
   const orderQuery = `
-    INSERT INTO orders (order_id, customer_name, customer_email, total_amount, production_number, order_date, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'Confirmed')
+    INSERT INTO orders (order_id, customer_name, customer_email, total_amount, order_date, status)
+    VALUES (?, ?, ?, ?, ?, 'Confirmed')
   `;
 
   connection.query(
     orderQuery,
-    [orderId, customerName, customerEmail, totalAmount, productionNumber || null, orderDate],
+    [orderId, customerName, customerEmail, totalAmount, orderDate],
     (err, orderResult) => {
       if (err) {
         console.error('Error inserting order:', err);
@@ -846,7 +846,7 @@ app.post('/api/orders', (req, res) => {
 
       // Store order items
       const itemsQuery = `
-        INSERT INTO order_items (order_id, item_name, quantity, unit_price, production_number)
+        INSERT INTO order_items (order_id, item_name, quantity, unit_price)
         VALUES ?
       `;
 
@@ -854,8 +854,7 @@ app.post('/api/orders', (req, res) => {
         orderId,
         item.ItemName || item.name,
         item.quantity,
-        parseFloat(item.UnitPrice || item.price || 0),
-        productionNumber || null
+        parseFloat(item.UnitPrice || item.price || 0)
       ]);
 
       connection.query(itemsQuery, [itemsValues], (itemErr) => {

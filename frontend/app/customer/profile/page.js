@@ -9,7 +9,7 @@ export default function CustomerProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    email: '', 
     phone: '',
     address: '',
     city: '',
