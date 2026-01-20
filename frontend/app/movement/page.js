@@ -261,7 +261,8 @@ export default function MovementPage() {
                                         padding: "12px",
                                         borderRadius: "8px",
                                         border: "1px solid #e0e0e0",
-                                        fontSize: "0.95rem"
+                                        fontSize: "0.95rem",
+                                        backgroundColor: "#ffffff"
                                     }}
                                     value={moveForm.type}
                                     onChange={e => setMoveForm({ ...moveForm, type: e.target.value })}
@@ -283,7 +284,8 @@ export default function MovementPage() {
                                             padding: "12px",
                                             borderRadius: "8px",
                                             border: "1px solid #e0e0e0",
-                                            fontSize: "0.95rem"
+                                            fontSize: "0.95rem",
+                                            backgroundColor: "#ffffff"
                                         }}
                                         value={moveForm.toLocation}
                                         onChange={e => setMoveForm({ ...moveForm, toLocation: e.target.value })}
@@ -302,7 +304,8 @@ export default function MovementPage() {
                                         padding: "12px",
                                         borderRadius: "8px",
                                         border: "1px solid #e0e0e0",
-                                        fontSize: "0.95rem"
+                                        fontSize: "0.95rem",
+                                        backgroundColor: "#ffffff"
                                     }}
                                     value={moveForm.quantity}
                                     onChange={e => setMoveForm({ ...moveForm, quantity: e.target.value })}
@@ -322,7 +325,8 @@ export default function MovementPage() {
                                         padding: "12px",
                                         borderRadius: "8px",
                                         border: "1px solid #e0e0e0",
-                                        fontSize: "0.95rem"
+                                        fontSize: "0.95rem",
+                                        backgroundColor: "#ffffff"
                                     }}
                                     value={moveForm.productionNumber}
                                     onChange={e => setMoveForm({ ...moveForm, productionNumber: e.target.value })}
@@ -362,7 +366,8 @@ export default function MovementPage() {
                                                     padding: "12px",
                                                     borderRadius: "8px",
                                                     border: "1px solid #e0e0e0",
-                                                    fontSize: "0.95rem"
+                                                    fontSize: "0.95rem",
+                                                    backgroundColor: "#ffffff"
                                                 }}
                                                 value={moveForm.customerName}
                                                 onChange={e => setMoveForm({ ...moveForm, customerName: e.target.value })}
@@ -382,7 +387,8 @@ export default function MovementPage() {
                                                     padding: "12px",
                                                     borderRadius: "8px",
                                                     border: "1px solid #e0e0e0",
-                                                    fontSize: "0.95rem"
+                                                    fontSize: "0.95rem",
+                                                    backgroundColor: "#ffffff"
                                                 }}
                                                 value={moveForm.customerEmail}
                                                 onChange={e => setMoveForm({ ...moveForm, customerEmail: e.target.value })}
@@ -401,7 +407,8 @@ export default function MovementPage() {
                                                     padding: "12px",
                                                     borderRadius: "8px",
                                                     border: "1px solid #e0e0e0",
-                                                    fontSize: "0.95rem"
+                                                    fontSize: "0.95rem",
+                                                    backgroundColor: "#ffffff"
                                                 }}
                                                 value={moveForm.trackingNumber}
                                                 onChange={e => setMoveForm({ ...moveForm, trackingNumber: e.target.value })}
@@ -422,7 +429,8 @@ export default function MovementPage() {
                                                     border: "1px solid #e0e0e0",
                                                     fontSize: "0.95rem",
                                                     fontFamily: "inherit",
-                                                    resize: "vertical"
+                                                    resize: "vertical",
+                                                    backgroundColor: "#ffffff"
                                                 }}
                                                 value={moveForm.notes}
                                                 onChange={e => setMoveForm({ ...moveForm, notes: e.target.value })}

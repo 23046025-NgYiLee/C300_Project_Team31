@@ -219,7 +219,8 @@ export default function StockTakingPage() {
                           borderRadius: "6px",
                           fontWeight: "bold",
                           color: hasVariance ? "#d35400" : "#2c3e50",
-                          outline: "none"
+                          outline: "none",
+                          backgroundColor: "#ffffff"
                         }}
                       />
                     </td>

@@ -354,55 +354,55 @@ export default function StockListPage() {
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label htmlFor="name">Stock Name *</label>
-                  <input type="text" id="name" name="name" value={form.name} onChange={handleFormChange} required />
+                  <input type="text" id="name" name="name" value={form.name} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="quantity">Quantity *</label>
-                  <input type="number" id="quantity" name="quantity" min="0" step="1" value={form.quantity} onChange={handleFormChange} required />
+                  <input type="number" id="quantity" name="quantity" min="0" step="1" value={form.quantity} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
               </div>
 
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label htmlFor="brand">Brand *</label>
-                  <input type="text" id="brand" name="brand" value={form.brand} onChange={handleFormChange} required />
+                  <input type="text" id="brand" name="brand" value={form.brand} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="ItemClass">Class *</label>
-                  <input type="text" id="ItemClass" name="ItemClass" value={form.ItemClass} onChange={handleFormChange} required />
+                  <input type="text" id="ItemClass" name="ItemClass" value={form.ItemClass} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
               </div>
 
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label htmlFor="type">Type *</label>
-                  <input type="text" id="type" name="type" value={form.type} onChange={handleFormChange} required />
+                  <input type="text" id="type" name="type" value={form.type} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="category">Category *</label>
-                  <input type="text" id="category" name="category" value={form.category} onChange={handleFormChange} required />
+                  <input type="text" id="category" name="category" value={form.category} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
               </div>
 
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label htmlFor="supplier">Supplier *</label>
-                  <input type="text" id="supplier" name="supplier" value={form.supplier} onChange={handleFormChange} required />
+                  <input type="text" id="supplier" name="supplier" value={form.supplier} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="unitPrice">Unit Price *</label>
-                  <input type="number" id="unitPrice" name="unitPrice" min="0" step="0.01" value={form.unitPrice} onChange={handleFormChange} required />
+                  <input type="number" id="unitPrice" name="unitPrice" min="0" step="0.01" value={form.unitPrice} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
               </div>
 
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label htmlFor="dateAdded">Date Added *</label>
-                  <input type="date" id="dateAdded" name="dateAdded" value={form.dateAdded} onChange={handleFormChange} required />
+                  <input type="date" id="dateAdded" name="dateAdded" value={form.dateAdded} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="lastUpdated">Last Updated *</label>
-                  <input type="date" id="lastUpdated" name="lastUpdated" value={form.lastUpdated} onChange={handleFormChange} required />
+                  <input type="date" id="lastUpdated" name="lastUpdated" value={form.lastUpdated} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
               </div>
 
@@ -419,7 +419,8 @@ export default function StockListPage() {
                       padding: "8px",
                       border: "1px solid #ddd",
                       borderRadius: "4px",
-                      cursor: "pointer"
+                      cursor: "pointer",
+                      backgroundColor: "#ffffff"
                     }}
                   />
                   <small style={{ color: '#78909c', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>

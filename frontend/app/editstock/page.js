@@ -190,6 +190,7 @@ function EditStockContent() {
                   onChange={handleChange}
                   required
                   className={styles.formInput}
+                  style={{ backgroundColor: "#ffffff" }}
                 />
               </div>
 
@@ -203,6 +204,7 @@ function EditStockContent() {
                   required
                   min="0"
                   className={styles.formInput}
+                  style={{ backgroundColor: "#ffffff" }}
                 />
               </div>
 
@@ -215,6 +217,7 @@ function EditStockContent() {
                   onChange={handleChange}
                   required
                   className={styles.formInput}
+                  style={{ backgroundColor: "#ffffff" }}
                 />
               </div>
 
@@ -227,6 +230,7 @@ function EditStockContent() {
                   onChange={handleChange}
                   required
                   className={styles.formInput}
+                  style={{ backgroundColor: "#ffffff" }}
                 />
               </div>
 
@@ -239,6 +243,7 @@ function EditStockContent() {
                   onChange={handleChange}
                   required
                   className={styles.formInput}
+                  style={{ backgroundColor: "#ffffff" }}
                 />
               </div>
 
@@ -251,6 +256,7 @@ function EditStockContent() {
                   onChange={handleChange}
                   required
                   className={styles.formInput}
+                  style={{ backgroundColor: "#ffffff" }}
                 />
               </div>
 
@@ -263,6 +269,7 @@ function EditStockContent() {
                   onChange={handleChange}
                   required
                   className={styles.formInput}
+                  style={{ backgroundColor: "#ffffff" }}
                 />
               </div>
 
@@ -277,6 +284,7 @@ function EditStockContent() {
                   min="0"
                   step="0.01"
                   className={styles.formInput}
+                  style={{ backgroundColor: "#ffffff" }}
                 />
               </div>
 
@@ -292,7 +300,8 @@ function EditStockContent() {
                     padding: "8px",
                     border: "1px solid #ddd",
                     borderRadius: "4px",
-                    cursor: "pointer"
+                    cursor: "pointer",
+                    backgroundColor: "#ffffff"
                   }}
                 />
                 <small style={{ color: '#78909c', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>
