@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link"; // Import Link for the back button
-import { API_BASE_URL } from "../../config/api";
+import { API_BASE_URL } from "../../../config/api";
 
 export default function ProductReportPage() {
   const [reports, setReports] = useState([]);

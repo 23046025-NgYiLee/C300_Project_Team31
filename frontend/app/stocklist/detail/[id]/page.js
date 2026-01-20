@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import styles from './detail.module.css';
 import dashboardStyles from '../../../AdminDashboard/dashboard.module.css';
 import DashboardLayout from '../../../partials/DashboardLayout';
-import { API_BASE_URL } from '../../../config/api';
+import { API_BASE_URL } from '../../../../config/api';
 
 export default function StockDetailPage() {
     const params = useParams();
