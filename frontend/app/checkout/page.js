@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
-import DashboardLayout from "../partials/DashboardLayout";
+import React, { useState, useEffect } from "react";
+import CustomerLayout from "../partials/CustomerLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
 import { sendOrderConfirmationEmail } from "../../utils/emailService";
+import { getCart, getCartTotal, clearCart } from "../../utils/cartUtils";
 
 export default function CheckoutPage() {
   const [customerName, setCustomerName] = useState('');
@@ -10,14 +11,26 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   
-  // Example cart items (in real app, this would come from cart state/context)
-  const [cart, setCart] = useState([
-    { id: 1, name: "Product A", quantity: 2, price: 29.99 },
-    { id: 2, name: "Product B", quantity: 1, price: 49.99 }
-  ]);
+  // Use cart items instead of demo items
+  const [cart, setCart] = useState([]);
+
+  useEffect(() => {
+    // Load cart items
+    const cartItems = getCart();
+    setCart(cartItems);
+    
+    // Load customer info if available
+    const customer = JSON.parse(localStorage.getItem("customer"));
+    if (customer && customer.name && customer.name !== "Guest") {
+      setCustomerName(customer.name);
+    }
+    if (customer && customer.email) {
+      setCustomerEmail(customer.email);
+    }
+  }, []);
 
   const calculateTotal = () => {
-    return cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    return getCartTotal();
   };
 
   const handleCheckout = async (e) => {
@@ -25,7 +38,21 @@ export default function CheckoutPage() {
     setLoading(true);
     setMessage('');
 
+    // Check if cart is empty
+    if (cart.length === 0) {
+      setMessage('✗ Your cart is empty. Please add items before checkout.');
+      setLoading(false);
+      return;
+    }
+
     try {
+      // Format corderItemsitems for the order
+      const orderItems = cart.map(item => ({
+        name: item.ItemName,
+        quantity: item.quantity,
+        price: parseFloat(item.UnitPrice || 0)
+      }));
+
       // 1. Process the order in your backend
       const orderResponse = await fetch('http://localhost:4000/api/orders', {
         method: 'POST',
@@ -57,16 +84,23 @@ export default function CheckoutPage() {
         orderId: orderData.orderId || `ORD-${Date.now()}`,
         orderDate: new Date(),
         totalAmount: calculateTotal(),
-        items: cart,
+        items: orderItems,
         status: 'Confirmed'
       });
 
       if (emailResult.success) {
         setMessage(`✓ Order placed successfully! Confirmation email sent to ${customerEmail}`);
         // Clear cart and form
+        clearCart();
         setCart([]);
+        window.dispatchEvent(new Event('cartUpdated'));
         setCustomerEmail('');
         setCustomerName('');
+        
+        // Redirect to orders page after 3 seconds
+        setTimeout(() => {
+          window.location.href = '/customer/orders';
+        }, 3000);
       } else {
         setMessage('✓ Order placed successfully, but email notification failed. Please check your email settings.');
       }
@@ -80,7 +114,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <DashboardLayout activePage="checkout">
+    <CustomerLayout activePage="checkout">
       <div className={styles.pageHeader}>
         <h2 className={styles.pageTitle}>Checkout</h2>
       </div>
@@ -103,12 +137,12 @@ export default function CheckoutPage() {
                 </thead>
                 <tbody>
                   {cart.map((item) => (
-                    <tr key={item.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                      <td style={{ padding: "12px" }}>{item.name}</td>
+                    <tr key={item.ItemID} style={{ borderBottom: "1px solid #f0f0f0" }}>
+                      <td style={{ padding: "12px" }}>{item.ItemName}</td>
                       <td style={{ textAlign: "center", padding: "12px" }}>{item.quantity}</td>
-                      <td style={{ textAlign: "right", padding: "12px" }}>${item.price.toFixed(2)}</td>
+                      <td style={{ textAlign: "right", padding: "12px" }}>${parseFloat(item.UnitPrice || 0).toFixed(2)}</td>
                       <td style={{ textAlign: "right", padding: "12px", fontWeight: "600" }}>
-                        ${(item.quantity * item.price).toFixed(2)}
+                        ${(item.quantity * parseFloat(item.UnitPrice || 0)).toFixed(2)}
                       </td>
                     </tr>
                   ))}
@@ -224,6 +258,6 @@ export default function CheckoutPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+    </CustomerLayout>
   );
 }

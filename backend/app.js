@@ -46,6 +46,51 @@ connection.connect((err) => {
     return;
   }
   console.log('Connected to MySQL database');
+  
+  // Create orders table if it doesn't exist
+  const createOrdersTable = `
+    CREATE TABLE IF NOT EXISTS orders (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      order_id VARCHAR(50) UNIQUE NOT NULL,
+      customer_name VARCHAR(255) NOT NULL,
+      customer_email VARCHAR(255) NOT NULL,
+      total_amount DECIMAL(10, 2) NOT NULL,
+      order_date DATETIME NOT NULL,
+      status VARCHAR(50) DEFAULT 'Pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_order_id (order_id),
+      INDEX idx_customer_email (customer_email),
+      INDEX idx_order_date (order_date)
+    )
+  `;
+  
+  const createOrderItemsTable = `
+    CREATE TABLE IF NOT EXISTS order_items (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      order_id VARCHAR(50) NOT NULL,
+      item_name VARCHAR(255) NOT NULL,
+      quantity INT NOT NULL,
+      unit_price DECIMAL(10, 2) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_order_id (order_id)
+    )
+  `;
+  
+  connection.query(createOrdersTable, (err) => {
+    if (err) {
+      console.error('Error creating orders table:', err);
+    } else {
+      console.log('Orders table ready');
+    }
+  });
+  
+  connection.query(createOrderItemsTable, (err) => {
+    if (err) {
+      console.error('Error creating order_items table:', err);
+    } else {
+      console.log('Order items table ready');
+    }
+  });
 });
 
 app.get('/', (req, res) => {
@@ -775,38 +820,77 @@ app.post('/api/orders', (req, res) => {
   const orderId = `ORD-${Date.now()}`;
   const orderDate = new Date();
 
-  // In a real application, you'd want to:
-  // 1. Store the order in an Orders table
-  // 2. Store order items in OrderItems table
-  // 3. Update inventory quantities
-  // 4. Handle transactions properly
+  // Store the order in database
+  const orderQuery = `
+    INSERT INTO orders (order_id, customer_name, customer_email, total_amount, order_date, status)
+    VALUES (?, ?, ?, ?, ?, 'Confirmed')
+  `;
 
-  // For now, we'll just return success with the order details
-  // You can extend this to actually store in your database
+  connection.query(
+    orderQuery,
+    [orderId, customerName, customerEmail, totalAmount, orderDate],
+    (err, orderResult) => {
+      if (err) {
+        console.error('Error inserting order:', err);
+        return res.status(500).json({ error: 'Failed to create order' });
+      }
 
-  console.log('Order received:', {
-    orderId,
-    customerName,
-    customerEmail,
-    items,
-    totalAmount,
-    orderDate
-  });
+      // Store order items
+      const itemsQuery = `
+        INSERT INTO order_items (order_id, item_name, quantity, unit_price)
+        VALUES ?
+      `;
 
-  // Simulate database insert success
-  res.status(201).json({
-    success: true,
-    orderId,
-    orderDate,
-    message: 'Order created successfully'
-  });
+      const itemsValues = items.map(item => [
+        orderId,
+        item.ItemName || item.name,
+        item.quantity,
+        parseFloat(item.UnitPrice || item.price || 0)
+      ]);
+
+      connection.query(itemsQuery, [itemsValues], (itemErr) => {
+        if (itemErr) {
+          console.error('Error inserting order items:', itemErr);
+          // Order is already created, so we'll continue
+        }
+
+        console.log('Order created successfully:', orderId);
+
+        res.status(201).json({
+          success: true,
+          orderId,
+          orderDate,
+          message: 'Order created successfully'
+        });
+      });
+    }
+  );
 });
 
-// Get all orders
+// Get all orders (for admin payments page)
 app.get('/api/orders', (req, res) => {
-  // This would fetch from your Orders table
-  // For now, return empty array or mock data
-  res.json([]);
+  const query = `
+    SELECT 
+      o.order_id,
+      o.customer_name,
+      o.customer_email,
+      o.total_amount,
+      o.order_date,
+      o.status,
+      GROUP_CONCAT(CONCAT(oi.item_name, ' (', oi.quantity, ')') SEPARATOR ', ') as items
+    FROM orders o
+    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+    GROUP BY o.order_id
+    ORDER BY o.order_date DESC
+  `;
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching orders:', err);
+      return res.status(500).json({ error: 'Failed to fetch orders' });
+    }
+    res.json(results);
+  });
 });
 
 // Get specific order
