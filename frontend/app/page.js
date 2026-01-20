@@ -195,6 +195,38 @@ export default function LoginPage() {
 
           <div className={styles.formFooter}>
             <p>Need help? Contact your administrator</p>
+            <div style={{ 
+              marginTop: "20px", 
+              padding: "16px", 
+              backgroundColor: "#f0f7ff",
+              borderRadius: "8px",
+              border: "1px solid #d0e7ff",
+              textAlign: "center"
+            }}>
+              <p style={{ margin: "0 0 12px 0", color: "#2c3e50", fontWeight: "600" }}>
+                🛍️ Customer Portal
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push('/customer')}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  backgroundColor: "#4caf50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "1rem",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "background-color 0.2s"
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = "#45a049"}
+                onMouseOut={(e) => e.target.style.backgroundColor = "#4caf50"}
+              >
+                Browse & Shop Products →
+              </button>
+            </div>
           </div>
         </div>
       </div>

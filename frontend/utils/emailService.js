@@ -18,27 +18,37 @@ emailjs.init('jwybb66KbgoQTWuRt');
  */
 export const sendOrderConfirmationEmail = async (orderData) => {
   try {
-    // Format items list for email
-    const itemsList = orderData.items.map((item, index) => 
-      `${index + 1}. ${item.name} - Quantity: ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`
-    ).join('\n');
+    // Format items list for email with proper structure
+    const ordersArray = orderData.items.map((item) => ({
+      name: item.name,
+      units: item.quantity,
+      price: (item.price * item.quantity).toFixed(2)
+    }));
 
-    // Prepare template parameters
+    // Calculate costs
+    const subtotal = orderData.totalAmount;
+    const shipping = 0; // Free shipping
+    const tax = (subtotal * 0.07).toFixed(2); // 7% tax
+    const totalWithTax = (parseFloat(subtotal) + parseFloat(tax)).toFixed(2);
+
+    // Prepare template parameters matching your EmailJS template exactly
     const templateParams = {
       to_email: orderData.customerEmail,      // EmailJS standard recipient field
       to_name: orderData.customerName,
-      customer_name: orderData.customerName,
-      customer_email: orderData.customerEmail,
-      order_id: orderData.orderId,
-      order_date: new Date(orderData.orderDate).toLocaleDateString('en-US', {
+      date: new Date(orderData.orderDate).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       }),
-      total_amount: orderData.totalAmount.toFixed(2),
-      order_items: itemsList,
-      order_status: orderData.status || 'Processing',
-      tracking_number: orderData.trackingNumber || 'Will be provided soon',
+      order_id: orderData.orderId,
+      orders: ordersArray,                    // Array for the {{#orders}} loop
+      cost: {
+        shipping: shipping.toFixed(2),
+        tax: tax
+      },
+      total_amount: totalWithTax,
       reply_to: orderData.customerEmail
     };
 

@@ -1,0 +1,137 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import CustomerLayout from "../../partials/CustomerLayout";
+import styles from "../../AdminDashboard/dashboard.module.css";
+
+export default function MyOrdersPage() {
+  const [customer, setCustomer] = useState(null);
+
+  useEffect(() => {
+    const loggedCustomer = JSON.parse(localStorage.getItem("customer"));
+    setCustomer(loggedCustomer);
+  }, []);
+
+  // Mock orders - in real app, fetch from backend
+  const mockOrders = [
+    {
+      id: "ORD-123456",
+      date: "2026-01-18",
+      status: "Shipped",
+      total: 149.99,
+      items: 3,
+      tracking: "TRK789012345"
+    },
+    {
+      id: "ORD-123455",
+      date: "2026-01-15",
+      status: "Delivered",
+      total: 89.50,
+      items: 2,
+      tracking: "TRK789012344"
+    }
+  ];
+
+  return (
+    <CustomerLayout activePage="orders">
+      <div className={styles.pageHeader}>
+        <h2 className={styles.pageTitle}>My Orders 📦</h2>
+        <p style={{ color: '#78909c', marginTop: '8px' }}>
+          Track and view your order history
+        </p>
+      </div>
+
+      {/* Orders List */}
+      <div className={styles.activityCard}>
+        <h3 className={styles.cardTitle}>Order History</h3>
+
+        {mockOrders.length > 0 ? (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #e0e0e0" }}>
+                  <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Order ID</th>
+                  <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Date</th>
+                  <th style={{ textAlign: "center", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Items</th>
+                  <th style={{ textAlign: "right", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Total</th>
+                  <th style={{ textAlign: "center", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Status</th>
+                  <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Tracking</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mockOrders.map((order) => (
+                  <tr key={order.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
+                    <td style={{ padding: "16px" }}>
+                      <strong style={{ color: "#2c3e50" }}>{order.id}</strong>
+                    </td>
+                    <td style={{ padding: "16px", color: "#546e7a" }}>
+                      {new Date(order.date).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: "16px", textAlign: "center" }}>
+                      <span style={{
+                        backgroundColor: "#e3f2fd",
+                        color: "#1565c0",
+                        padding: "4px 12px",
+                        borderRadius: "12px",
+                        fontWeight: "600",
+                        fontSize: "0.85rem"
+                      }}>
+                        {order.items}
+                      </span>
+                    </td>
+                    <td style={{ padding: "16px", textAlign: "right", fontWeight: "700", color: "#4caf50" }}>
+                      ${order.total.toFixed(2)}
+                    </td>
+                    <td style={{ padding: "16px", textAlign: "center" }}>
+                      <span style={{
+                        padding: "6px 12px",
+                        borderRadius: "20px",
+                        fontSize: "0.85rem",
+                        fontWeight: "600",
+                        backgroundColor: order.status === "Delivered" ? "#e8f5e9" : "#fff3e0",
+                        color: order.status === "Delivered" ? "#2e7d32" : "#ef6c00"
+                      }}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: "16px", color: "#546e7a", fontSize: "0.9rem" }}>
+                      {order.tracking}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "60px 20px" }}>
+            <div style={{ fontSize: "4rem", marginBottom: "16px" }}>📦</div>
+            <h3 style={{ color: "#2c3e50", marginBottom: "12px" }}>No Orders Yet</h3>
+            <p style={{ color: "#78909c", marginBottom: "24px" }}>
+              Start shopping to see your orders here!
+            </p>
+            <button 
+              className={styles.newRequestBtn}
+              onClick={() => window.location.href = '/customer/shop'}
+            >
+              Browse Products
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Info Box */}
+      <div style={{ 
+        marginTop: "24px", 
+        padding: "20px", 
+        backgroundColor: "#f0f7ff", 
+        borderRadius: "12px",
+        border: "1px solid #d0e7ff"
+      }}>
+        <h4 style={{ marginTop: 0, color: "#2c3e50" }}>📧 Email Notifications</h4>
+        <p style={{ color: "#546e7a", margin: 0 }}>
+          You'll receive email confirmations for all your orders with tracking information.
+          Check your inbox for order updates!
+        </p>
+      </div>
+    </CustomerLayout>
+  );
+}
