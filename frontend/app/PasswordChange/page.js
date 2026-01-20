@@ -3,7 +3,8 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from '../login.module.css'
-import { API_BASE_URL } from '../config/api'
+import { API_BASE_URL } from '../../config/api'
+
 
 
 

@@ -4,7 +4,7 @@ import CustomerLayout from "../../partials/CustomerLayout";
 import styles from "../../AdminDashboard/dashboard.module.css";
 import Link from "next/link";
 import { addToCart } from "../../../utils/cartUtils";
-import { API_BASE_URL } from "../../config/api";
+import { API_BASE_URL } from "../../../config/api";
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);

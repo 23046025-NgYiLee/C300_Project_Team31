@@ -4,7 +4,7 @@ import Link from "next/link";
 // 1. Import your Layout and Styles to match StockList
 import DashboardLayout from "../partials/DashboardLayout";
 import dashboardStyles from "../AdminDashboard/dashboard.module.css";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL } from "../../config/api";
 
 export default function StockTakingPage() {
   const [stocks, setStocks] = useState([]);

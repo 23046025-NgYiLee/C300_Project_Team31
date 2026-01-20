@@ -2,7 +2,7 @@
 import { useRef, useState } from 'react'
 import emailjs from '@emailjs/browser'
 import styles from '../auth.module.css'
-import { API_BASE_URL } from '../config/api'
+import { API_BASE_URL } from "../../config/api";
 
 export default function Register() {
   const [email, setEmail] = useState('')

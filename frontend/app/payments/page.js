@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "../partials/DashboardLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL } from "../../config/api";
 
 export default function PaymentPage() {
   const [payments, setPayments] = useState([]);

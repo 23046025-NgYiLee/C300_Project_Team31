@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import DashboardLayout from "../partials/DashboardLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
 import { sendShipmentNotificationEmail } from "../../utils/emailService";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL } from "../../config/api";
 
 export default function MovementPage() {
     const [stocks, setStocks] = useState([]);

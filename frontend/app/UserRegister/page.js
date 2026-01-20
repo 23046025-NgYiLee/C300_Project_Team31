@@ -4,7 +4,7 @@ import emailjs from '@emailjs/browser';
 import Link from 'next/link';
 import DashboardLayout from '../partials/DashboardLayout';
 import styles from './register.module.css';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL } from "../../config/api";
 
 export default function UserRegister() {
   const [email, setEmail] = useState('');

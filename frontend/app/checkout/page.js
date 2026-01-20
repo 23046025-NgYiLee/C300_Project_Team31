@@ -4,7 +4,7 @@ import CustomerLayout from "../partials/CustomerLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
 import { sendOrderConfirmationEmail } from "../../utils/emailService";
 import { getCart, getCartTotal, clearCart } from "../../utils/cartUtils";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL } from "../../config/api";
 
 export default function CheckoutPage() {
   const [customerName, setCustomerName] = useState('');

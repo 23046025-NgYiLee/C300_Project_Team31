@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./dashboard.module.css";
 import Link from "next/link";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL } from "../../config/api";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
