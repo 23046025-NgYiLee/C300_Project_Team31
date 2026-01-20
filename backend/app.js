@@ -51,7 +51,7 @@ connection.connect((err) => {
   }
   console.log('Connected to MySQL database');
 
-  // Create orders table if it doesn't exist
+  // Create orders table if it doesn't exist 
   const createOrdersTable = `
     CREATE TABLE IF NOT EXISTS orders (
       id INT AUTO_INCREMENT PRIMARY KEY,
