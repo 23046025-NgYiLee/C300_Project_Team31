@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "../partials/DashboardLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
+import { API_BASE_URL } from "../config/api";
 
 export default function ReportsPage() {
     const [activeTab, setActiveTab] = useState("accounts");
@@ -47,7 +48,7 @@ export default function ReportsPage() {
         setLoading(true);
 
         // Fetch Accounts Reports
-        fetch('http://localhost:4000/api/accounts_reports')
+        fetch(`${API_BASE_URL}/api/accounts_reports`)
             .then(res => res.json())
             .then(data => {
                 setAccountsReports(data);
@@ -67,13 +68,13 @@ export default function ReportsPage() {
             .catch(err => console.error("Error fetching accounts reports:", err));
 
         // Fetch Product Reports
-        fetch('http://localhost:4000/api/product_reports')
+        fetch(`${API_BASE_URL}/api/product_reports`)
             .then(res => res.json())
             .then(data => setProductReports(data))
             .catch(err => console.error("Error fetching product reports:", err));
 
         // Fetch Products/Stocks for Product Reports
-        fetch('http://localhost:4000/api/stocks')
+        fetch(`${API_BASE_URL}/api/stocks`)
             .then(res => res.json())
             .then(data => {
                 setProducts(data);
@@ -86,7 +87,7 @@ export default function ReportsPage() {
             .catch(err => console.error("Error fetching products:", err));
 
         // Fetch Inventory Reports
-        fetch('http://localhost:4000/api/inventory_reports')
+        fetch(`${API_BASE_URL}/api/inventory_reports`)
             .then(res => res.json())
             .then(data => {
                 setInventoryReports(data);
@@ -103,13 +104,13 @@ export default function ReportsPage() {
             .catch(err => console.error("Error fetching inventory reports:", err));
 
         // Fetch Transaction Reports
-        fetch('http://localhost:4000/api/transaction_reports')
+        fetch(`${API_BASE_URL}/api/transaction_reports`)
             .then(res => res.json())
             .then(data => setTransactionReports(data))
             .catch(err => console.error("Error fetching transaction reports:", err));
 
         // Fetch Transactions
-        fetch('http://localhost:4000/api/transactions')
+        fetch(`${API_BASE_URL}/api/transactions`)
             .then(res => res.json())
             .then(data => {
                 setTransactions(data);

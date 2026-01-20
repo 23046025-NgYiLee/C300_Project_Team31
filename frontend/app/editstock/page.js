@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import DashboardLayout from '../partials/DashboardLayout';
 import styles from '../auth.module.css';
 import dashboardStyles from '../AdminDashboard/dashboard.module.css';
+import { API_BASE_URL } from '../config/api';
 
 function EditStockContent() {
   const router = useRouter();
@@ -35,7 +36,7 @@ function EditStockContent() {
       return;
     }
 
-    fetch(`http://localhost:4000/api/stocks/${itemId}`)
+    fetch(`${API_BASE_URL}/api/stocks/${itemId}`)
       .then(res => {
         if (!res.ok) throw new Error('Item not found');
         return res.json();
@@ -94,7 +95,7 @@ function EditStockContent() {
         formDataToSend.append('image', formData.imageFile);
       }
 
-      const res = await fetch(`http://localhost:4000/api/stocks/${itemId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/stocks/${itemId}`, {
         method: 'PUT',
         body: formDataToSend
       });

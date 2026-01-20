@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react'
 import emailjs from '@emailjs/browser'
 import styles from '../auth.module.css'
+import { API_BASE_URL } from '../config/api'
 
 export default function Register() {
   const [email, setEmail] = useState('')
@@ -22,7 +23,7 @@ export default function Register() {
 
     try {
       // 1. Register user in backend
-      const res = await fetch('http://localhost:4000/register', {
+      const res = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "../partials/DashboardLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
+import { API_BASE_URL } from "../config/api";
 
 export default function PaymentPage() {
   const [payments, setPayments] = useState([]);
@@ -11,7 +12,7 @@ export default function PaymentPage() {
 
   useEffect(() => {
     // Fetch stock purchases
-    fetch('http://localhost:4000/api/stocks')
+    fetch(`${API_BASE_URL}/api/stocks`)
       .then(res => res.json())
       .then(data => {
         setPayments(data);
@@ -28,7 +29,7 @@ export default function PaymentPage() {
     //      GROUP_CONCAT(CONCAT(oi.item_name, ' (', oi.quantity, ')') SEPARATOR ', ') as items
     //      FROM orders o LEFT JOIN order_items oi ON o.order_id = oi.order_id
     //      GROUP BY o.order_id ORDER BY o.order_date DESC
-    fetch('http://localhost:4000/api/orders')
+    fetch(`${API_BASE_URL}/api/orders`)
       .then(res => res.json())
       .then(data => {
         setCustomerOrders(data);

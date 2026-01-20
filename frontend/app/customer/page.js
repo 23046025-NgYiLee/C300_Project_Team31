@@ -4,6 +4,7 @@ import CustomerLayout from "../partials/CustomerLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
 import Link from "next/link";
 import { addToCart } from "../../utils/cartUtils";
+import { API_BASE_URL } from "../config/api";
 
 export default function CustomerDashboard() {
   const [customer, setCustomer] = useState(null);
@@ -24,7 +25,7 @@ export default function CustomerDashboard() {
     }
 
     // Fetch featured products
-    fetch('http://localhost:4000/api/stocks')
+    fetch(`${API_BASE_URL}/api/stocks`)
       .then(res => res.json())
       .then(data => {
         // Show only products with stock
@@ -41,10 +42,10 @@ export default function CustomerDashboard() {
   const handleAddToCart = (product) => {
     addToCart(product, 1);
     setAddedToCart({ ...addedToCart, [product.ItemID]: true });
-    
+
     // Dispatch event to update cart count
     window.dispatchEvent(new Event('cartUpdated'));
-    
+
     // Reset animation after 2 seconds
     setTimeout(() => {
       setAddedToCart(prev => ({ ...prev, [product.ItemID]: false }));
@@ -66,9 +67,9 @@ export default function CustomerDashboard() {
       {/* Quick Actions */}
       <div className={styles.statsGrid} style={{ marginBottom: "32px" }}>
         <Link href="/customer/shop" style={{ textDecoration: "none" }}>
-          <div className={styles.statCard} style={{ cursor: "pointer", transition: "transform 0.2s" }} 
-               onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"}
-               onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
+          <div className={styles.statCard} style={{ cursor: "pointer", transition: "transform 0.2s" }}
+            onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"}
+            onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
             <div className={styles.statIcon} style={{ background: '#e3f2fd' }}>🛍️</div>
             <div className={styles.statInfo}>
               <div className={styles.statLabel}>Shop Products</div>
@@ -79,8 +80,8 @@ export default function CustomerDashboard() {
 
         <Link href="/checkout" style={{ textDecoration: "none" }}>
           <div className={styles.statCard} style={{ cursor: "pointer", transition: "transform 0.2s" }}
-               onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"}
-               onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
+            onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"}
+            onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
             <div className={styles.statIcon} style={{ background: '#e8f5e9' }}>💳</div>
             <div className={styles.statInfo}>
               <div className={styles.statLabel}>Quick Checkout</div>
@@ -91,8 +92,8 @@ export default function CustomerDashboard() {
 
         <Link href="/customer/orders" style={{ textDecoration: "none" }}>
           <div className={styles.statCard} style={{ cursor: "pointer", transition: "transform 0.2s" }}
-               onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"}
-               onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
+            onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.02)"}
+            onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
             <div className={styles.statIcon} style={{ background: '#fff3e0' }}>📦</div>
             <div className={styles.statInfo}>
               <div className={styles.statLabel}>My Orders</div>
@@ -116,10 +117,10 @@ export default function CustomerDashboard() {
             Loading products...
           </p>
         ) : products.length > 0 ? (
-          <div style={{ 
-            display: "grid", 
-            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", 
-            gap: "24px" 
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+            gap: "24px"
           }}>
             {products.map((product) => (
               <div key={product.ItemID} style={{
@@ -130,13 +131,13 @@ export default function CustomerDashboard() {
                 transition: "box-shadow 0.2s",
                 cursor: "pointer"
               }}
-              onMouseOver={(e) => e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)"}
-              onMouseOut={(e) => e.currentTarget.style.boxShadow = "none"}>
-                <div style={{ 
-                  width: "100%", 
-                  height: "150px", 
-                  backgroundColor: "#f5f5f5", 
-                  borderRadius: "8px", 
+                onMouseOver={(e) => e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)"}
+                onMouseOut={(e) => e.currentTarget.style.boxShadow = "none"}>
+                <div style={{
+                  width: "100%",
+                  height: "150px",
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: "8px",
                   marginBottom: "16px",
                   display: "flex",
                   alignItems: "center",
@@ -145,31 +146,31 @@ export default function CustomerDashboard() {
                 }}>
                   📦
                 </div>
-                <h4 style={{ 
-                  fontSize: "1.1rem", 
-                  fontWeight: "600", 
-                  marginBottom: "8px", 
-                  color: "#2c3e50" 
+                <h4 style={{
+                  fontSize: "1.1rem",
+                  fontWeight: "600",
+                  marginBottom: "8px",
+                  color: "#2c3e50"
                 }}>
                   {product.ItemName}
                 </h4>
-                <p style={{ 
-                  fontSize: "0.85rem", 
-                  color: "#78909c", 
-                  marginBottom: "12px" 
+                <p style={{
+                  fontSize: "0.85rem",
+                  color: "#78909c",
+                  marginBottom: "12px"
                 }}>
                   {product.Brand || "Quality Product"}
                 </p>
-                <div style={{ 
-                  display: "flex", 
-                  justifyContent: "space-between", 
+                <div style={{
+                  display: "flex",
+                  justifyContent: "space-between",
                   alignItems: "center",
                   marginTop: "16px"
                 }}>
-                  <span style={{ 
-                    fontSize: "1.3rem", 
-                    fontWeight: "700", 
-                    color: "#4caf50" 
+                  <span style={{
+                    fontSize: "1.3rem",
+                    fontWeight: "700",
+                    color: "#4caf50"
                   }}>
                     ${parseFloat(product.UnitPrice || 0).toFixed(2)}
                   </span>
@@ -181,11 +182,11 @@ export default function CustomerDashboard() {
                     {product.Quantity} in stock
                   </span>
                 </div>
-                <button 
+                <button
                   className={styles.newRequestBtn}
-                  style={{ 
-                    width: "100%", 
-                    marginTop: "16px", 
+                  style={{
+                    width: "100%",
+                    marginTop: "16px",
                     padding: "10px",
                     fontSize: "0.9rem",
                     backgroundColor: addedToCart[product.ItemID] ? "#4caf50" : "#1976d2"
@@ -205,10 +206,10 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Info Section */}
-      <div style={{ 
-        marginTop: "32px", 
-        padding: "24px", 
-        backgroundColor: "#f0f7ff", 
+      <div style={{
+        marginTop: "32px",
+        padding: "24px",
+        backgroundColor: "#f0f7ff",
         borderRadius: "12px",
         border: "1px solid #d0e7ff"
       }}>
@@ -216,8 +217,8 @@ export default function CustomerDashboard() {
           📧 Email Confirmation Available
         </h3>
         <p style={{ color: "#546e7a", marginBottom: "12px" }}>
-          ✓ Receive order confirmations via email<br/>
-          ✓ Get tracking information for your shipments<br/>
+          ✓ Receive order confirmations via email<br />
+          ✓ Get tracking information for your shipments<br />
           ✓ Stay updated on your order status
         </p>
         <Link href="/checkout" className={styles.newRequestBtn}>

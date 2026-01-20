@@ -4,6 +4,7 @@ import CustomerLayout from "../../partials/CustomerLayout";
 import styles from "../../AdminDashboard/dashboard.module.css";
 import Link from "next/link";
 import { addToCart } from "../../../utils/cartUtils";
+import { API_BASE_URL } from "../../config/api";
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
@@ -13,7 +14,7 @@ export default function ShopPage() {
   const [addedToCart, setAddedToCart] = useState({});
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/stocks')
+    fetch(`${API_BASE_URL}/api/stocks`)
       .then(res => res.json())
       .then(data => {
         // Filter to show only items with stock
@@ -31,7 +32,7 @@ export default function ShopPage() {
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.ItemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (product.Brand || "").toLowerCase().includes(searchTerm.toLowerCase());
+      (product.Brand || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All" || product.ItemClass === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -39,10 +40,10 @@ export default function ShopPage() {
   const handleAddToCart = (product) => {
     addToCart(product, 1);
     setAddedToCart({ ...addedToCart, [product.ItemID]: true });
-    
+
     // Dispatch event to update cart count
     window.dispatchEvent(new Event('cartUpdated'));
-    
+
     // Reset animation after 2 seconds
     setTimeout(() => {
       setAddedToCart(prev => ({ ...prev, [product.ItemID]: false }));
@@ -59,9 +60,9 @@ export default function ShopPage() {
       </div>
 
       {/* Filters */}
-      <div style={{ 
-        display: "flex", 
-        gap: "16px", 
+      <div style={{
+        display: "flex",
+        gap: "16px",
         marginBottom: "24px",
         flexWrap: "wrap",
         alignItems: "center"
@@ -80,7 +81,7 @@ export default function ShopPage() {
             fontSize: "0.95rem"
           }}
         />
-        
+
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
@@ -111,10 +112,10 @@ export default function ShopPage() {
             Loading products...
           </p>
         ) : filteredProducts.length > 0 ? (
-          <div style={{ 
-            display: "grid", 
-            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", 
-            gap: "24px" 
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+            gap: "24px"
           }}>
             {filteredProducts.map((product) => (
               <div key={product.ItemID} style={{
@@ -125,13 +126,13 @@ export default function ShopPage() {
                 transition: "box-shadow 0.2s",
                 cursor: "pointer"
               }}
-              onMouseOver={(e) => e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)"}
-              onMouseOut={(e) => e.currentTarget.style.boxShadow = "none"}>
-                <div style={{ 
-                  width: "100%", 
-                  height: "150px", 
-                  backgroundColor: "#f5f5f5", 
-                  borderRadius: "8px", 
+                onMouseOver={(e) => e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)"}
+                onMouseOut={(e) => e.currentTarget.style.boxShadow = "none"}>
+                <div style={{
+                  width: "100%",
+                  height: "150px",
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: "8px",
                   marginBottom: "16px",
                   display: "flex",
                   alignItems: "center",
@@ -140,38 +141,38 @@ export default function ShopPage() {
                 }}>
                   📦
                 </div>
-                <h4 style={{ 
-                  fontSize: "1.1rem", 
-                  fontWeight: "600", 
-                  marginBottom: "8px", 
-                  color: "#2c3e50" 
+                <h4 style={{
+                  fontSize: "1.1rem",
+                  fontWeight: "600",
+                  marginBottom: "8px",
+                  color: "#2c3e50"
                 }}>
                   {product.ItemName}
                 </h4>
-                <p style={{ 
-                  fontSize: "0.85rem", 
-                  color: "#78909c", 
-                  marginBottom: "8px" 
+                <p style={{
+                  fontSize: "0.85rem",
+                  color: "#78909c",
+                  marginBottom: "8px"
                 }}>
                   {product.Brand || "Quality Product"}
                 </p>
-                <p style={{ 
-                  fontSize: "0.8rem", 
+                <p style={{
+                  fontSize: "0.8rem",
                   color: "#546e7a",
                   marginBottom: "12px"
                 }}>
                   Category: {product.ItemClass || "General"}
                 </p>
-                <div style={{ 
-                  display: "flex", 
-                  justifyContent: "space-between", 
+                <div style={{
+                  display: "flex",
+                  justifyContent: "space-between",
                   alignItems: "center",
                   marginTop: "16px"
                 }}>
-                  <span style={{ 
-                    fontSize: "1.3rem", 
-                    fontWeight: "700", 
-                    color: "#4caf50" 
+                  <span style={{
+                    fontSize: "1.3rem",
+                    fontWeight: "700",
+                    color: "#4caf50"
                   }}>
                     ${parseFloat(product.UnitPrice || 0).toFixed(2)}
                   </span>
@@ -184,9 +185,9 @@ export default function ShopPage() {
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
-                  <button 
+                  <button
                     className={styles.newRequestBtn}
-                    style={{ 
+                    style={{
                       flex: 1,
                       padding: "10px",
                       fontSize: "0.9rem",
@@ -196,7 +197,7 @@ export default function ShopPage() {
                   >
                     {addedToCart[product.ItemID] ? "✓ Added!" : "🛒 Add to Cart"}
                   </button>
-                  <Link 
+                  <Link
                     href="/customer/cart"
                     style={{
                       flex: 0,

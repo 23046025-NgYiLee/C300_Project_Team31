@@ -4,6 +4,7 @@ import CustomerLayout from "../partials/CustomerLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
 import { sendOrderConfirmationEmail } from "../../utils/emailService";
 import { getCart, getCartTotal, clearCart } from "../../utils/cartUtils";
+import { API_BASE_URL } from "../config/api";
 
 export default function CheckoutPage() {
   const [customerName, setCustomerName] = useState('');
@@ -55,7 +56,7 @@ export default function CheckoutPage() {
       }));
 
       // 1. Process the order in your backend
-      const orderResponse = await fetch('http://localhost:4000/api/orders', {
+      const orderResponse = await fetch(`${API_BASE_URL}/api/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

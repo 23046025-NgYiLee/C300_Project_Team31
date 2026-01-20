@@ -3,6 +3,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from '../login.module.css'
+import { API_BASE_URL } from '../config/api'
 
 
 
@@ -31,7 +32,7 @@ export default function PasswordChange() {
     }
 
     try {
-      const res = await fetch('http://localhost:4000/change-password', {
+      const res = await fetch(`${API_BASE_URL}/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

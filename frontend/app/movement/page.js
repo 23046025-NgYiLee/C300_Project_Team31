@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import DashboardLayout from "../partials/DashboardLayout";
 import styles from "../AdminDashboard/dashboard.module.css";
 import { sendShipmentNotificationEmail } from "../../utils/emailService";
+import { API_BASE_URL } from "../config/api";
 
 export default function MovementPage() {
     const [stocks, setStocks] = useState([]);
@@ -25,7 +26,7 @@ export default function MovementPage() {
 
     // Fetch Data
     useEffect(() => {
-        fetch('http://localhost:4000/api/stocks')
+        fetch(`${API_BASE_URL}/api/stocks`)
             .then(res => res.json())
             .then(data => {
                 const dataWithLocation = data.map(item => ({
@@ -79,7 +80,7 @@ export default function MovementPage() {
             };
 
             // Call the backend API to record the movement
-            const response = await fetch('http://localhost:4000/api/movements', {
+            const response = await fetch(`${API_BASE_URL}/api/movements`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(movementData)
