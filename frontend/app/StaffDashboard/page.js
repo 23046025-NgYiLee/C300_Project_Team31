@@ -106,10 +106,14 @@ export default function StaffDashboard() {
                         <span className={styles.navIcon}>📦</span>
                         Stock
                     </Link>
-                    <div className={styles.navItem} onClick={toggleMobileMenu}>
-                        <span className={styles.navIcon}>📋</span>
-                        Reports
-                    </div>
+                    <Link href="/payments" className={styles.navItem} onClick={toggleMobileMenu}>
+                        <span className={styles.navIcon}>💳</span>
+                        Payment
+                    </Link>
+                    <Link href="/movement" className={styles.navItem} onClick={toggleMobileMenu}>
+                        <span className={styles.navIcon}>🚚</span>
+                        Movement
+                    </Link>
                 </nav>
             </div>
 
@@ -125,10 +129,14 @@ export default function StaffDashboard() {
                             <span className={styles.navIcon}>📦</span>
                             Stock
                         </Link>
-                        <div className={styles.navItem}>
-                            <span className={styles.navIcon}>📋</span>
-                            Reports
-                        </div>
+                        <Link href="/payments" className={styles.navItem}>
+                            <span className={styles.navIcon}>💳</span>
+                            Payment
+                        </Link>
+                        <Link href="/movement" className={styles.navItem}>
+                            <span className={styles.navIcon}>🚚</span>
+                            Movement
+                        </Link>
                     </nav>
                 </aside>
 

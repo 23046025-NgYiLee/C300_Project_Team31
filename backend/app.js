@@ -115,10 +115,11 @@ app.post('/login', (req, res) => {
         return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-
       let role = 'staff';
       if (user.is_admin === 1 || user.is_admin === true) {
         role = 'admin';
+      } else if (user.is_supervisor === 1 || user.is_supervisor === true) {
+        role = 'supervisor';
       } else if (user.is_staff === 1 || user.is_staff === true) {
         role = 'staff';
       }
@@ -811,7 +812,7 @@ app.get('/api/orders', (req, res) => {
 // Get specific order
 app.get('/api/orders/:orderId', (req, res) => {
   const { orderId } = req.params;
-  
+
   // This would fetch the specific order from database
   res.status(404).json({ error: 'Order not found' });
 });

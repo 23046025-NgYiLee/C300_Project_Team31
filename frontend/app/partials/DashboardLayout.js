@@ -3,17 +3,26 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "../AdminDashboard/dashboard.module.css";
 
-export default function DashboardLayout({ children, activePage = "", userRole = "admin" }) {
+export default function DashboardLayout({ children, activePage = "" }) {
     const [user, setUser] = useState(null);
+    const [userRole, setUserRole] = useState("staff");
 
     useEffect(() => {
-        const loggedUser = JSON.parse(localStorage.getItem("user")) || { name: "Admin" };
+        const loggedUser = JSON.parse(localStorage.getItem("user")) || { name: "User", role: "staff" };
         setUser(loggedUser);
+        setUserRole(loggedUser.role || "staff");
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("user");
         window.location.href = "/";
+    };
+
+    // Determine dashboard link based on role
+    const getDashboardLink = () => {
+        if (userRole === "admin") return "/AdminDashboard";
+        if (userRole === "supervisor") return "/SupervisorDashboard";
+        return "/StaffDashboard";
     };
 
     return (
@@ -42,7 +51,7 @@ export default function DashboardLayout({ children, activePage = "", userRole = 
                 {/* Sidebar */}
                 <aside className={styles.sidebar}>
                     <nav className={styles.sidebarNav}>
-                        <Link href="/AdminDashboard" className={`${styles.navItem} ${activePage === "dashboard" ? styles.active : ""}`}>
+                        <Link href={getDashboardLink()} className={`${styles.navItem} ${activePage === "dashboard" ? styles.active : ""}`}>
                             <span className={styles.navIcon}>📊</span>
                             Dashboard
                         </Link>
@@ -59,20 +68,23 @@ export default function DashboardLayout({ children, activePage = "", userRole = 
                             Movement
                         </Link>
 
+                        {/* Admin only - User Management */}
                         {userRole === "admin" && (
                             <>
                                 <Link href="/UserRegister" className={`${styles.navItem} ${activePage === "users" ? styles.active : ""}`}>
                                     <span className={styles.navIcon}>👥</span>
                                     User Management
                                 </Link>
-
                                 <div className={styles.navDivider} style={{ margin: "15px 0", borderTop: "1px solid #ddd" }}></div>
-
-                                <Link href="/reports" className={`${styles.navItem} ${activePage === "reports" ? styles.active : ""}`}>
-                                    <span className={styles.navIcon}>📊</span>
-                                    Reports
-                                </Link>
                             </>
+                        )}
+
+                        {/* Supervisor and Admin - Reports */}
+                        {(userRole === "admin" || userRole === "supervisor") && (
+                            <Link href="/reports" className={`${styles.navItem} ${activePage === "reports" ? styles.active : ""}`}>
+                                <span className={styles.navIcon}>📊</span>
+                                Reports
+                            </Link>
                         )}
                     </nav>
                 </aside>
