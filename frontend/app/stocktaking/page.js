@@ -51,7 +51,8 @@ export default function StockTakingPage() {
           ItemName: item.ItemName,
           OldQuantity: item.Quantity,
           NewQuantity: actual,
-          Variance: actual - item.Quantity
+          Variance: actual - item.Quantity,
+          Notes: `Stock take adjustment: ${item.Quantity} → ${actual}`
         });
       }
     });
@@ -62,12 +63,28 @@ export default function StockTakingPage() {
     }
 
     const confirmMsg = `You are about to adjust ${adjustments.length} items:\n\n` +
-      adjustments.map(a => `- ${a.ItemName}: ${a.OldQuantity} -> ${a.NewQuantity}`).join("\n");
+      adjustments.map(a => `- ${a.ItemName}: ${a.OldQuantity} → ${a.NewQuantity}`).join("\n");
 
     if (window.confirm(confirmMsg)) {
-      // Add your API PUT/PATCH logic here
-      alert("Stock levels updated successfully!");
-      window.location.reload();
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/stocktaking/finalize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ adjustments })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to finalize stock taking');
+        }
+
+        alert(`✓ Stock levels updated successfully!\n${result.adjustedItems} items adjusted.`);
+        window.location.reload();
+      } catch (error) {
+        console.error('Error finalizing stock take:', error);
+        alert(`Error: ${error.message}\nPlease try again or contact support.`);
+      }
     }
   };
 

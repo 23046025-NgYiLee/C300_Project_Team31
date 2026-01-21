@@ -70,6 +70,34 @@ const createOrderItemsTable = `
   )
 `;
 
+// Product Information Reference Tables
+const createBrandsTable = `
+  CREATE TABLE IF NOT EXISTS Brands (
+    BrandID INT AUTO_INCREMENT PRIMARY KEY,
+    BrandName VARCHAR(255) UNIQUE NOT NULL,
+    Description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
+const createClassesTable = `
+  CREATE TABLE IF NOT EXISTS Classes (
+    ClassID INT AUTO_INCREMENT PRIMARY KEY,
+    ClassName VARCHAR(255) UNIQUE NOT NULL,
+    Description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
+const createTypesTable = `
+  CREATE TABLE IF NOT EXISTS Types (
+    TypeID INT AUTO_INCREMENT PRIMARY KEY,
+    TypeName VARCHAR(255) UNIQUE NOT NULL,
+    Description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
 // Initialize tables
 pool.query(createOrdersTable, (err) => {
   if (err) console.error('Error creating orders table:', err);
@@ -79,6 +107,21 @@ pool.query(createOrdersTable, (err) => {
 pool.query(createOrderItemsTable, (err) => {
   if (err) console.error('Error creating order_items table:', err);
   else console.log('Order items table ready');
+});
+
+pool.query(createBrandsTable, (err) => {
+  if (err) console.error('Error creating brands table:', err);
+  else console.log('Brands table ready');
+});
+
+pool.query(createClassesTable, (err) => {
+  if (err) console.error('Error creating classes table:', err);
+  else console.log('Classes table ready');
+});
+
+pool.query(createTypesTable, (err) => {
+  if (err) console.error('Error creating types table:', err);
+  else console.log('Types table ready');
 });
 
 app.get('/', (req, res) => {
@@ -309,6 +352,195 @@ app.get('/api/transactions', (req, res) => {
   pool.query('SELECT * FROM Transactions ORDER BY transactionDate DESC', (err, results) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch transactions' });
     res.json(results);
+  });
+});
+
+// Transaction CRUD Operations
+app.post('/api/transactions', (req, res) => {
+  const { accountID, amount, transactionDate, description } = req.body;
+  if (!accountID || !amount) {
+    return res.status(400).json({ error: 'Account ID and amount are required' });
+  }
+  const sql = 'INSERT INTO Transactions (accountID, amount, transactionDate, description) VALUES (?, ?, ?, ?)';
+  const date = transactionDate || new Date();
+  pool.query(sql, [accountID, amount, date, description || ''], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to create transaction', details: err.message });
+    res.status(201).json({ message: 'Transaction created', transactionID: result.insertId });
+  });
+});
+
+app.put('/api/transactions/:id', (req, res) => {
+  const { id } = req.params;
+  const { accountID, amount, transactionDate, description } = req.body;
+  const sql = 'UPDATE Transactions SET accountID = ?, amount = ?, transactionDate = ?, description = ? WHERE transactionID = ?';
+  pool.query(sql, [accountID, amount, transactionDate, description, id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to update transaction', details: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Transaction not found' });
+    res.json({ message: 'Transaction updated successfully' });
+  });
+});
+
+app.delete('/api/transactions/:id', (req, res) => {
+  const { id } = req.params;
+  pool.query('DELETE FROM Transactions WHERE transactionID = ?', [id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to delete transaction', details: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Transaction not found' });
+    res.json({ message: 'Transaction deleted successfully' });
+  });
+});
+
+// Stock Taking Finalization
+app.post('/api/stocktaking/finalize', (req, res) => {
+  const { adjustments } = req.body;
+  if (!adjustments || !Array.isArray(adjustments) || adjustments.length === 0) {
+    return res.status(400).json({ error: 'Adjustments array is required' });
+  }
+  
+  let completed = 0;
+  let errors = [];
+  
+  adjustments.forEach((adjustment, index) => {
+    const { ItemID, NewQuantity, Variance, Notes } = adjustment;
+    
+    pool.query(
+      'UPDATE Inventory SET Quantity = ?, LastUpdated = NOW() WHERE ItemID = ?',
+      [NewQuantity, ItemID],
+      (err, result) => {
+        if (err) {
+          errors.push({ ItemID, error: err.message });
+        }
+        completed++;
+        
+        if (completed === adjustments.length) {
+          if (errors.length > 0) {
+            return res.status(500).json({ 
+              error: 'Some adjustments failed', 
+              details: errors,
+              successful: adjustments.length - errors.length 
+            });
+          }
+          res.json({ 
+            message: 'Stock taking finalized successfully', 
+            adjustedItems: adjustments.length 
+          });
+        }
+      }
+    );
+  });
+});
+
+// Brand/Class/Type Reference Table APIs
+// Brands CRUD
+app.get('/api/brands', (req, res) => {
+  pool.query('SELECT * FROM Brands ORDER BY BrandName ASC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch brands' });
+    res.json(results);
+  });
+});
+
+app.post('/api/brands', (req, res) => {
+  const { BrandName, Description } = req.body;
+  if (!BrandName) return res.status(400).json({ error: 'Brand name is required' });
+  pool.query('INSERT INTO Brands (BrandName, Description) VALUES (?, ?)', [BrandName, Description || ''], (err, result) => {
+    if (err) {
+      if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Brand already exists' });
+      return res.status(500).json({ error: 'Failed to create brand', details: err.message });
+    }
+    res.status(201).json({ message: 'Brand created', BrandID: result.insertId });
+  });
+});
+
+app.put('/api/brands/:id', (req, res) => {
+  const { id } = req.params;
+  const { BrandName, Description } = req.body;
+  pool.query('UPDATE Brands SET BrandName = ?, Description = ? WHERE BrandID = ?', [BrandName, Description, id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to update brand', details: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Brand not found' });
+    res.json({ message: 'Brand updated successfully' });
+  });
+});
+
+app.delete('/api/brands/:id', (req, res) => {
+  pool.query('DELETE FROM Brands WHERE BrandID = ?', [req.params.id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to delete brand', details: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Brand not found' });
+    res.json({ message: 'Brand deleted successfully' });
+  });
+});
+
+// Classes CRUD
+app.get('/api/classes', (req, res) => {
+  pool.query('SELECT * FROM Classes ORDER BY ClassName ASC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch classes' });
+    res.json(results);
+  });
+});
+
+app.post('/api/classes', (req, res) => {
+  const { ClassName, Description } = req.body;
+  if (!ClassName) return res.status(400).json({ error: 'Class name is required' });
+  pool.query('INSERT INTO Classes (ClassName, Description) VALUES (?, ?)', [ClassName, Description || ''], (err, result) => {
+    if (err) {
+      if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Class already exists' });
+      return res.status(500).json({ error: 'Failed to create class', details: err.message });
+    }
+    res.status(201).json({ message: 'Class created', ClassID: result.insertId });
+  });
+});
+
+app.put('/api/classes/:id', (req, res) => {
+  const { id } = req.params;
+  const { ClassName, Description } = req.body;
+  pool.query('UPDATE Classes SET ClassName = ?, Description = ? WHERE ClassID = ?', [ClassName, Description, id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to update class', details: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Class not found' });
+    res.json({ message: 'Class updated successfully' });
+  });
+});
+
+app.delete('/api/classes/:id', (req, res) => {
+  pool.query('DELETE FROM Classes WHERE ClassID = ?', [req.params.id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to delete class', details: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Class not found' });
+    res.json({ message: 'Class deleted successfully' });
+  });
+});
+
+// Types CRUD
+app.get('/api/types', (req, res) => {
+  pool.query('SELECT * FROM Types ORDER BY TypeName ASC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch types' });
+    res.json(results);
+  });
+});
+
+app.post('/api/types', (req, res) => {
+  const { TypeName, Description } = req.body;
+  if (!TypeName) return res.status(400).json({ error: 'Type name is required' });
+  pool.query('INSERT INTO Types (TypeName, Description) VALUES (?, ?)', [TypeName, Description || ''], (err, result) => {
+    if (err) {
+      if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Type already exists' });
+      return res.status(500).json({ error: 'Failed to create type', details: err.message });
+    }
+    res.status(201).json({ message: 'Type created', TypeID: result.insertId });
+  });
+});
+
+app.put('/api/types/:id', (req, res) => {
+  const { id } = req.params;
+  const { TypeName, Description } = req.body;
+  pool.query('UPDATE Types SET TypeName = ?, Description = ? WHERE TypeID = ?', [TypeName, Description, id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to update type', details: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Type not found' });
+    res.json({ message: 'Type updated successfully' });
+  });
+});
+
+app.delete('/api/types/:id', (req, res) => {
+  pool.query('DELETE FROM Types WHERE TypeID = ?', [req.params.id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to delete type', details: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Type not found' });
+    res.json({ message: 'Type deleted successfully' });
   });
 });
 

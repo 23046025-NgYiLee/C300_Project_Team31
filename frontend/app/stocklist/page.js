@@ -147,21 +147,33 @@ export default function StockListPage() {
         <div>
           <h2 className={dashboardStyles.pageTitle}>Stock Inventory</h2>
 
-          {/* --- NEW LINK ADDED HERE --- */}
-          <Link
-            href="/stocktaking"
-            style={{
-              display: "inline-block",
-              marginTop: "5px",
-              color: "#4e5dbdff",
-              fontWeight: "bold",
-              textDecoration: "none",
-              fontSize: "0.95rem"
-            }}
-          >
-            ➜ Go to Stock Taking
-          </Link>
-          {/* --------------------------- */}
+          {/* Quick Links */}
+          <div style={{ display: "flex", gap: "15px", marginTop: "8px" }}>
+            <Link
+              href="/stocktaking"
+              style={{
+                display: "inline-block",
+                color: "#4e5dbdff",
+                fontWeight: "bold",
+                textDecoration: "none",
+                fontSize: "0.95rem"
+              }}
+            >
+              📋 Stock Taking
+            </Link>
+            <Link
+              href="/product-references"
+              style={{
+                display: "inline-block",
+                color: "#27ae60",
+                fontWeight: "bold",
+                textDecoration: "none",
+                fontSize: "0.95rem"
+              }}
+            >
+              🏷️ Product References
+            </Link>
+          </div>
 
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
