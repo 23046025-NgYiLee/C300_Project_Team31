@@ -24,19 +24,30 @@ export default function CustomerDashboard() {
       setCustomer(loggedCustomer);
     }
 
+    const controller = new AbortController();
+    setLoading(true);
+
     // Fetch featured products
-    fetch(`${API_BASE_URL}/api/stocks`)
+    fetch(`${API_BASE_URL}/api/stocks`, { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
-        // Show only products with stock
-        const availableProducts = data.filter(item => item.Quantity > 0).slice(0, 6);
-        setProducts(availableProducts);
+        if (Array.isArray(data)) {
+          // Show only products with stock
+          const availableProducts = data.filter(item => item.Quantity > 0).slice(0, 6);
+          setProducts(availableProducts);
+        } else {
+          console.error("Products data is not an array:", data);
+          setProducts([]);
+        }
         setLoading(false);
       })
       .catch(err => {
-        console.error("Error:", err);
+        if (err.name === 'AbortError') return;
+        console.error("Error fetching featured products:", err);
         setLoading(false);
       });
+
+    return () => controller.abort();
   }, []);
 
   const handleAddToCart = (product) => {

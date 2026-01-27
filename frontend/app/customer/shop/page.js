@@ -14,21 +14,32 @@ export default function ShopPage() {
   const [addedToCart, setAddedToCart] = useState({});
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/stocks`)
+    const controller = new AbortController();
+    setLoading(true);
+
+    fetch(`${API_BASE_URL}/api/stocks`, { signal: controller.signal })
       .then(res => res.json())
       .then(data => {
-        // Filter to show only items with stock
-        const availableProducts = data.filter(item => item.Quantity > 0);
-        setProducts(availableProducts);
+        if (Array.isArray(data)) {
+          // Filter to show only items with stock
+          const availableProducts = data.filter(item => item.Quantity > 0);
+          setProducts(availableProducts);
+        } else {
+          console.error("Shop products data is not an array:", data);
+          setProducts([]);
+        }
         setLoading(false);
       })
       .catch(err => {
-        console.error("Error:", err);
+        if (err.name === 'AbortError') return;
+        console.error("Error fetching shop products:", err);
         setLoading(false);
       });
+
+    return () => controller.abort();
   }, []);
 
-  const categories = ["All", ...new Set(products.map(p => p.ItemClass || "Uncategorized"))];
+  const categories = ["All", ...new Set((Array.isArray(products) ? products : []).map(p => p.ItemClass || "Uncategorized"))];
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.ItemName.toLowerCase().includes(searchTerm.toLowerCase()) ||

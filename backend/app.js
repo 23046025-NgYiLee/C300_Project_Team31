@@ -596,7 +596,18 @@ app.post('/api/orders', (req, res) => {
 });
 
 app.get('/api/orders', (req, res) => {
-  pool.query('SELECT o.*, COUNT(oi.id) as item_count FROM orders o LEFT JOIN order_items oi ON o.order_id = oi.order_id GROUP BY o.order_id ORDER BY o.order_date DESC', (err, results) => {
+  const { email } = req.query;
+  let sql = 'SELECT o.*, COUNT(oi.id) as item_count FROM orders o LEFT JOIN order_items oi ON o.order_id = oi.order_id';
+  let params = [];
+
+  if (email) {
+    sql += ' WHERE o.customer_email = ?';
+    params.push(email);
+  }
+
+  sql += ' GROUP BY o.order_id ORDER BY o.order_date DESC';
+
+  pool.query(sql, params, (err, results) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch orders' });
     res.json(results);
   });
