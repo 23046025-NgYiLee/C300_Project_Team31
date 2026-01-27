@@ -395,13 +395,13 @@ app.post('/api/stocktaking/finalize', (req, res) => {
   if (!adjustments || !Array.isArray(adjustments) || adjustments.length === 0) {
     return res.status(400).json({ error: 'Adjustments array is required' });
   }
-  
+
   let completed = 0;
   let errors = [];
-  
+
   adjustments.forEach((adjustment, index) => {
     const { ItemID, NewQuantity, Variance, Notes } = adjustment;
-    
+
     pool.query(
       'UPDATE Inventory SET Quantity = ?, LastUpdated = NOW() WHERE ItemID = ?',
       [NewQuantity, ItemID],
@@ -410,18 +410,18 @@ app.post('/api/stocktaking/finalize', (req, res) => {
           errors.push({ ItemID, error: err.message });
         }
         completed++;
-        
+
         if (completed === adjustments.length) {
           if (errors.length > 0) {
-            return res.status(500).json({ 
-              error: 'Some adjustments failed', 
+            return res.status(500).json({
+              error: 'Some adjustments failed',
               details: errors,
-              successful: adjustments.length - errors.length 
+              successful: adjustments.length - errors.length
             });
           }
-          res.json({ 
-            message: 'Stock taking finalized successfully', 
-            adjustedItems: adjustments.length 
+          res.json({
+            message: 'Stock taking finalized successfully',
+            adjustedItems: adjustments.length
           });
         }
       }
@@ -576,6 +576,130 @@ app.get('/api/orders/:orderId', (req, res) => {
     pool.query('SELECT * FROM order_items WHERE order_id = ?', [req.params.orderId], (err, items) => {
       res.json({ ...orders[0], items });
     });
+  });
+});
+
+// ========== REPORT GENERATION ENDPOINTS ==========
+
+// Generate individual item report
+app.get('/api/reports/item/:itemId', (req, res) => {
+  const { itemId } = req.params;
+  const sql = `
+    SELECT 
+      i.*,
+      COUNT(m.MovementID) as total_movements,
+      SUM(CASE WHEN m.MovementType = 'Shipment' THEN m.Quantity ELSE 0 END) as total_shipped,
+      SUM(CASE WHEN m.MovementType = 'Transfer' THEN m.Quantity ELSE 0 END) as total_transferred
+    FROM Inventory i
+    LEFT JOIN MovementHistory m ON i.ItemID = m.ItemID
+    WHERE i.ItemID = ?
+    GROUP BY i.ItemID
+  `;
+  pool.query(sql, [itemId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to generate item report', details: err.message });
+    if (results.length === 0) return res.status(404).json({ error: 'Item not found' });
+
+    pool.query('SELECT * FROM MovementHistory WHERE ItemID = ? ORDER BY MovementDate DESC LIMIT 50', [itemId], (movErr, movements) => {
+      if (movErr) return res.status(500).json({ error: 'Failed to fetch movement history' });
+      res.json({
+        item: results[0],
+        movements: movements,
+        generated_at: new Date().toISOString()
+      });
+    });
+  });
+});
+
+// Generate overall inventory report
+app.get('/api/reports/inventory/overall', (req, res) => {
+  const sql = `
+    SELECT 
+      i.*,
+      COALESCE(SUM(m.Quantity), 0) as total_movements,
+      COALESCE(COUNT(m.MovementID), 0) as movement_count
+    FROM Inventory i
+    LEFT JOIN MovementHistory m ON i.ItemID = m.ItemID
+    GROUP BY i.ItemID
+    ORDER BY i.ItemName ASC
+  `;
+  pool.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to generate overall report', details: err.message });
+
+    const summary = {
+      total_items: results.length,
+      total_quantity: results.reduce((sum, item) => sum + (item.Quantity || 0), 0),
+      total_value: results.reduce((sum, item) => sum + ((item.Quantity || 0) * (item.UnitPrice || 0)), 0),
+      low_stock_items: results.filter(item => item.Quantity < 10).length,
+      out_of_stock_items: results.filter(item => item.Quantity === 0).length,
+      by_category: {}
+    };
+
+    results.forEach(item => {
+      const category = item.ItemCategory || 'Uncategorized';
+      if (!summary.by_category[category]) {
+        summary.by_category[category] = { count: 0, total_quantity: 0, total_value: 0 };
+      }
+      summary.by_category[category].count++;
+      summary.by_category[category].total_quantity += item.Quantity || 0;
+      summary.by_category[category].total_value += (item.Quantity || 0) * (item.UnitPrice || 0);
+    });
+
+    res.json({ summary, items: results, generated_at: new Date().toISOString() });
+  });
+});
+
+// Generate CSV export for inventory
+app.get('/api/reports/inventory/csv', (req, res) => {
+  pool.query('SELECT * FROM Inventory ORDER BY ItemName ASC', (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to generate CSV', details: err.message });
+    if (results.length === 0) return res.status(404).send('No data available');
+
+    const headers = Object.keys(results[0]).join(',');
+    const rows = results.map(row => {
+      return Object.values(row).map(value => {
+        if (value === null) return '';
+        if (typeof value === 'string' && value.includes(',')) return `"${value}"`;
+        return value;
+      }).join(',');
+    });
+
+    const csv = [headers, ...rows].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="inventory_report_${Date.now()}.csv"`);
+    res.send(csv);
+  });
+});
+
+// Generate individual item CSV
+app.get('/api/reports/item/:itemId/csv', (req, res) => {
+  const { itemId } = req.params;
+  const sql = `
+    SELECT 
+      i.*, m.MovementType, m.FromLocation, m.ToLocation, m.Quantity as MovementQuantity, 
+      m.MovedBy, m.MovementDate, m.Notes
+    FROM Inventory i
+    LEFT JOIN MovementHistory m ON i.ItemID = m.ItemID
+    WHERE i.ItemID = ?
+    ORDER BY m.MovementDate DESC
+  `;
+  pool.query(sql, [itemId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Failed to generate CSV', details: err.message });
+    if (results.length === 0) return res.status(404).send('Item not found');
+
+    const headers = Object.keys(results[0]).join(',');
+    const rows = results.map(row => {
+      return Object.values(row).map(value => {
+        if (value === null) return '';
+        if (typeof value === 'string' && value.includes(',')) return `"${value}"`;
+        return value;
+      }).join(',');
+    });
+
+    const csv = [headers, ...rows].join('\n');
+    const itemName = results[0].ItemName.replace(/[^a-z0-9]/gi, '_');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${itemName}_report_${Date.now()}.csv"`);
+    res.send(csv);
   });
 });
 
