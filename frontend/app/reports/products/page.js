@@ -12,7 +12,12 @@ export default function ProductReportPage() {
     fetch(`${API_BASE_URL}/api/product_reports`)
       .then(res => res.json())
       .then(data => {
-        setReports(data);
+        if (Array.isArray(data)) {
+          setReports(data);
+        } else {
+          console.error("Product reports data is not an array:", data);
+          setReports([]);
+        }
         setLoading(false);
       })
       .catch(err => {
