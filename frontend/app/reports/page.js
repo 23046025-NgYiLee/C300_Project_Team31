@@ -45,120 +45,77 @@ export default function ReportsPage() {
 
     // Fetch all data on mount
     useEffect(() => {
+        const controller = new AbortController();
         setLoading(true);
 
-        // Fetch Accounts Reports
-        fetch(`${API_BASE_URL}/api/accounts_reports`)
+        fetch(`${API_BASE_URL}/api/reports/summary`, { signal: controller.signal })
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data)) {
-                    setAccountsReports(data);
-                    const totalRevenue = data
-                        .filter(r => r.reportDetails?.toLowerCase().includes('revenue') || r.reportDetails?.toLowerCase().includes('income'))
-                        .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-                    const totalExpenses = data
-                        .filter(r => r.reportDetails?.toLowerCase().includes('expense') || r.reportDetails?.toLowerCase().includes('cost'))
-                        .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-                    setAccountsStats({
-                        totalRevenue,
-                        totalExpenses,
-                        netIncome: totalRevenue - totalExpenses,
-                        reportCount: data.length
-                    });
-                } else {
-                    console.error("Accounts data is not an array:", data);
-                    setAccountsReports([]);
-                }
-            })
-            .catch(err => console.error("Error fetching accounts reports:", err));
+                if (data.error) throw new Error(data.error);
 
-        // Fetch Product Reports
-        fetch(`${API_BASE_URL}/api/product_reports`)
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    setProductReports(data);
-                } else {
-                    console.error("Product reports data is not an array:", data);
-                    setProductReports([]);
-                }
-            })
-            .catch(err => console.error("Error fetching product reports:", err));
+                // Handle Accounts Reports & Stats
+                const accReports = data.accountsReports || [];
+                setAccountsReports(accReports);
+                const totalRevenueValue = accReports
+                    .filter(r => r.reportDetails?.toLowerCase().includes('revenue') || r.reportDetails?.toLowerCase().includes('income'))
+                    .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+                const totalExpensesValue = accReports
+                    .filter(r => r.reportDetails?.toLowerCase().includes('expense') || r.reportDetails?.toLowerCase().includes('cost'))
+                    .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+                setAccountsStats({
+                    totalRevenue: totalRevenueValue,
+                    totalExpenses: totalExpensesValue,
+                    netIncome: totalRevenueValue - totalExpensesValue,
+                    reportCount: accReports.length
+                });
 
-        // Fetch Products/Stocks for Product Reports
-        fetch(`${API_BASE_URL}/api/stocks`)
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    setProducts(data);
-                    const totalProducts = data.length;
-                    const inStock = data.filter(p => p.Quantity > 10).length;
-                    const lowStock = data.filter(p => p.Quantity > 0 && p.Quantity <= 10).length;
-                    const outOfStock = data.filter(p => p.Quantity === 0).length;
-                    setProductStats({ totalProducts, inStock, lowStock, outOfStock });
-                } else {
-                    console.error("Stocks data is not an array:", data);
-                    setProducts([]);
-                }
-            })
-            .catch(err => console.error("Error fetching products:", err));
+                // Handle Product Reports
+                setProductReports(data.productReports || []);
 
-        // Fetch Inventory Reports
-        fetch(`${API_BASE_URL}/api/inventory_reports`)
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    setInventoryReports(data);
-                    setInventoryStats({
-                        totalItems: data.length,
-                        recentChanges: data.filter(r => {
-                            const reportDate = new Date(r.reportDate);
-                            const weekAgo = new Date();
-                            weekAgo.setDate(weekAgo.getDate() - 7);
-                            return reportDate >= weekAgo;
-                        }).length
-                    });
-                } else {
-                    console.error("Inventory reports data is not an array:", data);
-                    setInventoryReports([]);
-                }
-            })
-            .catch(err => console.error("Error fetching inventory reports:", err));
+                // Handle Stocks & Product Stats
+                const stockData = data.stocks || [];
+                setProducts(stockData);
+                setProductStats({
+                    totalProducts: stockData.length,
+                    inStock: stockData.filter(p => p.Quantity > 10).length,
+                    lowStock: stockData.filter(p => p.Quantity > 0 && p.Quantity <= 10).length,
+                    outOfStock: stockData.filter(p => p.Quantity === 0).length
+                });
 
-        // Fetch Transaction Reports
-        fetch(`${API_BASE_URL}/api/transaction_reports`)
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    setTransactionReports(data);
-                } else {
-                    console.error("Transaction reports data is not an array:", data);
-                    setTransactionReports([]);
-                }
-            })
-            .catch(err => console.error("Error fetching transaction reports:", err));
+                // Handle Inventory Reports & Stats
+                const invReports = data.inventoryReports || [];
+                setInventoryReports(invReports);
+                setInventoryStats({
+                    totalItems: invReports.length,
+                    recentChanges: invReports.filter(r => {
+                        const reportDate = new Date(r.reportDate);
+                        const weekAgo = new Date();
+                        weekAgo.setDate(weekAgo.getDate() - 7);
+                        return reportDate >= weekAgo;
+                    }).length
+                });
 
-        // Fetch Transactions
-        fetch(`${API_BASE_URL}/api/transactions`)
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    setTransactions(data);
-                    const totalAmount = data.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
-                    setTransactionStats({
-                        totalTransactions: data.length,
-                        totalAmount
-                    });
-                } else {
-                    console.error("Transactions data is not an array:", data);
-                    setTransactions([]);
-                }
+                // Handle Transaction Reports
+                setTransactionReports(data.transactionReports || []);
+
+                // Handle Transactions & Stats
+                const transData = data.transactions || [];
+                setTransactions(transData);
+                const totalTransAmount = transData.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+                setTransactionStats({
+                    totalTransactions: transData.length,
+                    totalAmount: totalTransAmount
+                });
+
                 setLoading(false);
             })
             .catch(err => {
-                console.error("Error fetching transactions:", err);
+                if (err.name === 'AbortError') return;
+                console.error("Error fetching reports dashboard summary:", err);
                 setLoading(false);
             });
+
+        return () => controller.abort();
     }, []);
 
     const tabs = [

@@ -324,7 +324,38 @@ app.post('/api/user', (req, res) => {
   });
 });
 
-// Reports Endpoints
+// Consolidated Report Dashboard Summary
+app.get('/api/reports/summary', (req, res) => {
+  const data = {};
+  let completed = 0;
+  const queries = {
+    accountsReports: 'SELECT * FROM Accounts_Reports ORDER BY reportDate DESC',
+    productReports: 'SELECT * FROM Product_Reports ORDER BY reportDate DESC',
+    inventoryReports: 'SELECT * FROM Inventory_Reports ORDER BY reportDate DESC',
+    transactionReports: 'SELECT * FROM Transaction_Reports ORDER BY reportDate DESC',
+    transactions: 'SELECT * FROM Transactions ORDER BY transactionDate DESC',
+    stocks: 'SELECT * FROM Inventory ORDER BY ItemName ASC'
+  };
+
+  const totalQueries = Object.keys(queries).length;
+
+  Object.keys(queries).forEach(key => {
+    pool.query(queries[key], (err, results) => {
+      if (err) {
+        console.error(`Error fetching ${key}:`, err);
+        data[key] = []; // Fallback to empty array
+      } else {
+        data[key] = results;
+      }
+
+      completed++;
+      if (completed === totalQueries) {
+        res.json(data);
+      }
+    });
+  });
+});
+
 app.get('/api/accounts_reports', (req, res) => {
   pool.query('SELECT * FROM Accounts_Reports ORDER BY reportDate DESC', (err, results) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch accounts reports' });
