@@ -24,6 +24,11 @@ export default function AdminDashboard() {
     fetch(`${API_BASE_URL}/api/stocks`)
       .then(res => res.json())
       .then(data => {
+        if (!Array.isArray(data)) {
+          console.error("Dashboard data is not an array:", data);
+          setStocks([]);
+          return;
+        }
         setStocks(data);
         // Calculate statistics
         const totalItems = data.reduce((sum, item) => sum + (item.Quantity || 0), 0);

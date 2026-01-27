@@ -194,7 +194,7 @@ export default function PaymentPage() {
                     <tr key={item.ItemID || item._id} style={{ borderBottom: "1px solid #f0f0f0" }}>
                       <td style={{ padding: "16px" }}>
                         <strong style={{ fontSize: "0.95rem", color: "#2c3e50" }}>{item.ItemName}</strong>
-                        <div style={{ fontSize: "0.8rem", color: "#78909c", marginTop: "4px" }}>{item.Brand}</div>
+                        <div style={{ fontSize: "0.8rem", color: "#78909c", marginTop: "4px" }}>Name: {item.Brand}</div>
                       </td>
                       <td style={{ padding: "16px", color: "#546e7a" }}>{item.ItemClass || item.category || "N/A"}</td>
                       <td style={{ padding: "16px", color: "#546e7a" }}>

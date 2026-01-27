@@ -154,7 +154,7 @@ export default function ShopPage() {
                   color: "#78909c",
                   marginBottom: "8px"
                 }}>
-                  {product.Brand || "Quality Product"}
+                  Name: {product.Brand || "Quality Product"}
                 </p>
                 <p style={{
                   fontSize: "0.8rem",

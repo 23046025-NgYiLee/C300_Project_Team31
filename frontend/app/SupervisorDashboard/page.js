@@ -24,6 +24,11 @@ export default function SupervisorDashboard() {
         fetch(`${API_BASE_URL}/api/stocks`)
             .then(res => res.json())
             .then(data => {
+                if (!Array.isArray(data)) {
+                    console.error("Dashboard data is not an array:", data);
+                    setStocks([]);
+                    return;
+                }
                 setStocks(data);
                 const totalItems = data.reduce((sum, item) => sum + (item.Quantity || 0), 0);
                 const lowStock = data.filter(item => item.Quantity <= 10).length;
@@ -43,6 +48,7 @@ export default function SupervisorDashboard() {
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
 
+    // Group stocks by category or name (formerly brand) for warehouse-style display
     const groupedStocks = stocks.reduce((acc, stock) => {
         const category = stock.ItemCategory || 'Uncategorized';
         if (!acc[category]) acc[category] = [];

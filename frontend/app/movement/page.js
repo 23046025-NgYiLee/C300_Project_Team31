@@ -29,6 +29,14 @@ export default function MovementPage() {
         fetch(`${API_BASE_URL}/api/stocks`)
             .then(res => res.json())
             .then(data => {
+                // Safely handle cases where data might be an error object or not an array
+                if (!Array.isArray(data)) {
+                    console.error("Stocks data is not an array:", data);
+                    setStocks([]);
+                    setLoading(false);
+                    return;
+                }
+
                 const dataWithLocation = data.map(item => ({
                     ...item,
                     Location: item.Location || "Zone A - Arrival"
@@ -37,7 +45,8 @@ export default function MovementPage() {
                 setLoading(false);
             })
             .catch(err => {
-                console.error("Error:", err);
+                console.error("Error fetching stocks:", err);
+                setStocks([]);
                 setLoading(false);
             });
     }, []);

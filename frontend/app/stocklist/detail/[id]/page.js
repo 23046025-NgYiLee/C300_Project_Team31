@@ -132,11 +132,7 @@ export default function StockDetailPage() {
                             Product Information
                         </h3>
                         <div className={styles.detailRow}>
-                            <span className={styles.label}>Item ID:</span>
-                            <span className={styles.value}>#{item.ItemID}</span>
-                        </div>
-                        <div className={styles.detailRow}>
-                            <span className={styles.label}>Brand:</span>
+                            <span className={styles.label}>Name:</span>
                             <span className={styles.value}>{item.Brand || 'N/A'}</span>
                         </div>
                         <div className={styles.detailRow}>
@@ -228,6 +224,6 @@ export default function StockDetailPage() {
                     </button>
                 </div>
             </div>
-        </DashboardLayout>
+        </DashboardLayout >
     );
 }

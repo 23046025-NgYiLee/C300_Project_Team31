@@ -210,7 +210,7 @@ function EditStockContent() {
               </div>
 
               <div className={styles.formGroup}>
-                <label>Brand *</label>
+                <label>Name *</label>
                 <input
                   type="text"
                   name="brand"

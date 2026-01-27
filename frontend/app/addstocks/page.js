@@ -80,10 +80,7 @@ export default function AddStocksPage() {
               required
             />
           </div>
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="brand">Brand:</label>
-            <input type="text" id="brand" name="brand" value={form.brand} onChange={handleChange} required />
-          </div>
+
           <div style={{ marginBottom: "16px" }}>
             <label htmlFor="ItemClass">Class:</label>
             <input

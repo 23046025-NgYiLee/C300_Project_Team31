@@ -30,6 +30,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Create MySQL connection pool for better performance
+// Note: Limited to 5 connections to stay within hosting limits
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '8p0w1d.h.filess.io',
   user: process.env.DB_USER || 'inventory_management_thinkclay',
@@ -37,8 +38,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'inventory_management_thinkclay',
   port: process.env.DB_PORT || 61002,
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionLimit: 5,
+  queueLimit: 10
 });
 
 // Table creation strings

@@ -90,7 +90,7 @@ export default function CartPage() {
           {/* Cart Items */}
           <div className={styles.activityCard} style={{ marginBottom: "24px" }}>
             <h3 className={styles.cardTitle}>Cart Items ({cart.length})</h3>
-            
+
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
@@ -124,12 +124,12 @@ export default function CartPage() {
                               {item.ItemName}
                             </strong>
                             <span style={{ fontSize: "0.85rem", color: "#78909c" }}>
-                              {item.Brand || "Quality Product"}
+                              Name: {item.Brand || "Quality Product"}
                             </span>
                             {item.quantity > item.Quantity && (
-                              <div style={{ 
-                                fontSize: "0.8rem", 
-                                color: "#f44336", 
+                              <div style={{
+                                fontSize: "0.8rem",
+                                color: "#f44336",
                                 marginTop: "4px",
                                 fontWeight: "600"
                               }}>
@@ -228,10 +228,10 @@ export default function CartPage() {
               <p style={{ color: "#78909c", marginBottom: "20px" }}>
                 Need more items? Browse our product catalog
               </p>
-              <Link 
-                href="/customer/shop" 
+              <Link
+                href="/customer/shop"
                 className={styles.newRequestBtn}
-                style={{ 
+                style={{
                   display: "inline-block",
                   textDecoration: "none"
                 }}
@@ -243,7 +243,7 @@ export default function CartPage() {
             {/* Order Summary */}
             <div className={styles.activityCard}>
               <h3 className={styles.cardTitle}>Order Summary</h3>
-              
+
               <div style={{ padding: "20px 0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px", fontSize: "1rem" }}>
                   <span style={{ color: "#546e7a" }}>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items):</span>
@@ -261,11 +261,11 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <Link 
+              <Link
                 href="/checkout"
                 className={styles.newRequestBtn}
-                style={{ 
-                  width: "100%", 
+                style={{
+                  width: "100%",
                   display: "block",
                   textAlign: "center",
                   padding: "16px",
@@ -276,16 +276,16 @@ export default function CartPage() {
                 💳 Proceed to Checkout
               </Link>
 
-              <div style={{ 
-                marginTop: "16px", 
-                padding: "12px", 
+              <div style={{
+                marginTop: "16px",
+                padding: "12px",
                 backgroundColor: "#f0f7ff",
                 borderRadius: "8px",
                 fontSize: "0.85rem",
                 color: "#546e7a"
               }}>
-                ✓ Secure checkout<br/>
-                ✓ Email confirmation<br/>
+                ✓ Secure checkout<br />
+                ✓ Email confirmation<br />
                 ✓ Order tracking
               </div>
             </div>

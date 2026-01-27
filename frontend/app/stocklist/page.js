@@ -11,7 +11,7 @@ import { API_BASE_URL } from "../../config/api";
 export default function StockListPage() {
   const [stocks, setStocks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterBrand, setFilterBrand] = useState("");
+  const [filterBrand, setFilterBrand] = useState(""); // UI Label: Name
   const [filterClass, setFilterClass] = useState("");
   const [filterType, setFilterType] = useState("");
   const [minQuantity, setMinQuantity] = useState("");
@@ -65,7 +65,14 @@ export default function StockListPage() {
 
     fetch(url)
       .then(res => res.json())
-      .then(data => setStocks(data))
+      .then(data => {
+        if (Array.isArray(data)) {
+          setStocks(data);
+        } else {
+          console.error("Stocks data is not an array:", data);
+          setStocks([]);
+        }
+      })
       .catch(() => setStocks([]));
   }, [searchTerm, filterBrand, filterClass, filterType, minQuantity, maxQuantity]);
 
@@ -197,7 +204,7 @@ export default function StockListPage() {
       <div style={{ marginBottom: "20px" }}>
         <input
           type="text"
-          placeholder="Search by name, brand, class, or type..."
+          placeholder="Search by name, class, or type..."
           className={dashboardStyles.searchInput}
           style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #e0e0e0" }}
           value={searchTerm}
@@ -209,14 +216,14 @@ export default function StockListPage() {
       <div className={styles.filterSection}>
         <div className={styles.filterGrid}>
           <div className={styles.filterItem}>
-            <label htmlFor="brandFilter">Brand</label>
+            <label htmlFor="brandFilter">Name</label>
             <select
               id="brandFilter"
               className="form-select"
               value={filterBrand}
               onChange={(e) => setFilterBrand(e.target.value)}
             >
-              <option value="">All Brands</option>
+              <option value="">All Names</option>
               {filterOptions.brands.map(brand => (
                 <option key={brand} value={brand}>{brand}</option>
               ))}
@@ -317,7 +324,7 @@ export default function StockListPage() {
                   <div className={styles.stockCardTitle}>{stock.ItemName}</div>
                   <div className={styles.stockCardDesc}>
                     Quantity: {stock.Quantity}<br />
-                    Brand: {stock.Brand}<br />
+                    Name: {stock.Brand}<br />
                     Class: {stock.ItemClass}<br />
                     Type: {stock.ItemType}<br />
                   </div>
@@ -377,7 +384,7 @@ export default function StockListPage() {
 
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label htmlFor="brand">Brand *</label>
+                  <label htmlFor="brand">Name *</label>
                   <input type="text" id="brand" name="brand" value={form.brand} onChange={handleFormChange} required style={{ backgroundColor: "#ffffff" }} />
                 </div>
                 <div className={styles.formGroup}>

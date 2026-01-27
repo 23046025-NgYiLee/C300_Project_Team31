@@ -59,16 +59,16 @@ export default function ProductReferencesPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const endpoint = activeTab === "brands" ? "/api/brands" : 
-                     activeTab === "classes" ? "/api/classes" : "/api/types";
-    const nameField = activeTab === "brands" ? "BrandName" : 
-                      activeTab === "classes" ? "ClassName" : "TypeName";
+    const endpoint = activeTab === "brands" ? "/api/brands" :
+      activeTab === "classes" ? "/api/classes" : "/api/types";
+    const nameField = activeTab === "brands" ? "BrandName" :
+      activeTab === "classes" ? "ClassName" : "TypeName";
 
     try {
-      const url = modalMode === "add" ? 
-        `${API_BASE_URL}${endpoint}` : 
+      const url = modalMode === "add" ?
+        `${API_BASE_URL}${endpoint}` :
         `${API_BASE_URL}${endpoint}/${currentItem.BrandID || currentItem.ClassID || currentItem.TypeID}`;
-      
+
       const response = await fetch(url, {
         method: modalMode === "add" ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
@@ -79,7 +79,7 @@ export default function ProductReferencesPage() {
       });
 
       const result = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(result.error || "Operation failed");
       }
@@ -96,8 +96,8 @@ export default function ProductReferencesPage() {
     const name = item.BrandName || item.ClassName || item.TypeName;
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
-    const endpoint = activeTab === "brands" ? "/api/brands" : 
-                     activeTab === "classes" ? "/api/classes" : "/api/types";
+    const endpoint = activeTab === "brands" ? "/api/brands" :
+      activeTab === "classes" ? "/api/classes" : "/api/types";
     const id = item.BrandID || item.ClassID || item.TypeID;
 
     try {
@@ -106,7 +106,7 @@ export default function ProductReferencesPage() {
       });
 
       const result = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(result.error || "Delete failed");
       }
@@ -146,7 +146,7 @@ export default function ProductReferencesPage() {
         borderLeft: "4px solid #2196f3"
       }}>
         <p style={{ margin: 0, color: "#1565c0", fontSize: "0.9rem" }}>
-          <strong>ℹ️ Product Information Tables:</strong> Product brands, classes, and types are now stored in separate reference tables for better data integrity and management.
+          <strong>ℹ️ Product Information Tables:</strong> Product names, classes, and types are now stored in separate reference tables for better data integrity and management.
         </p>
       </div>
 
@@ -155,7 +155,7 @@ export default function ProductReferencesPage() {
         <div className={styles.statCard}>
           <div className={styles.statIcon} style={{ background: '#e3f2fd' }}>🏷️</div>
           <div className={styles.statInfo}>
-            <div className={styles.statLabel}>Total Brands</div>
+            <div className={styles.statLabel}>Total Names</div>
             <div className={styles.statValue}>{brands.length}</div>
           </div>
         </div>
@@ -198,7 +198,7 @@ export default function ProductReferencesPage() {
               textTransform: "capitalize"
             }}
           >
-            {tab === "brands" ? "🏷️" : tab === "classes" ? "📂" : "🔖"} {tab}
+            {tab === "brands" ? "🏷️" : tab === "classes" ? "📂" : "🔖"} {tab === "brands" ? "names" : tab}
           </button>
         ))}
       </div>
@@ -215,7 +215,7 @@ export default function ProductReferencesPage() {
         <h3 className={styles.cardTitle}>
           {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Management
         </h3>
-        
+
         {loading ? (
           <p style={{ textAlign: "center", padding: "40px", color: "#999" }}>Loading...</p>
         ) : (
@@ -334,7 +334,7 @@ export default function ProductReferencesPage() {
             <h3 style={{ marginTop: 0, color: "#2c3e50", fontSize: "1.5rem" }}>
               {modalMode === "add" ? "➕ Add New" : "✏️ Edit"} {activeTab.slice(0, -1)}
             </h3>
-            
+
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: "20px" }}>
                 <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#2c3e50" }}>
