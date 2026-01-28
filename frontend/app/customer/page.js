@@ -170,7 +170,7 @@ export default function CustomerDashboard() {
                   color: "#78909c",
                   marginBottom: "12px"
                 }}>
-                  Name: {product.Brand || "Quality Product"}
+                  Brand: {product.Brand || "Quality Product"}
                 </p>
                 <div style={{
                   display: "flex",
