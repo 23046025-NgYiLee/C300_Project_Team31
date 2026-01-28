@@ -42,62 +42,7 @@ const pool = mysql.createPool({
   queueLimit: 10
 });
 
-// Table creation strings
-const createOrdersTable = `
-  CREATE TABLE IF NOT EXISTS orders (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id VARCHAR(50) UNIQUE NOT NULL,
-    customer_name VARCHAR(255) NOT NULL,
-    customer_email VARCHAR(255) NOT NULL,
-    total_amount DECIMAL(10, 2) NOT NULL,
-    order_date DATETIME NOT NULL,
-    status VARCHAR(50) DEFAULT 'Pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_order_id (order_id),
-    INDEX idx_customer_email (customer_email),
-    INDEX idx_order_date (order_date)
-  )
-`;
 
-const createOrderItemsTable = `
-  CREATE TABLE IF NOT EXISTS order_items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id VARCHAR(50) NOT NULL,
-    item_name VARCHAR(255) NOT NULL,
-    quantity INT NOT NULL,
-    unit_price DECIMAL(10, 2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_order_id (order_id)
-  )
-`;
-
-// Product Information Reference Tables
-const createBrandsTable = `
-  CREATE TABLE IF NOT EXISTS Brands (
-    BrandID INT AUTO_INCREMENT PRIMARY KEY,
-    BrandName VARCHAR(255) UNIQUE NOT NULL,
-    Description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`;
-
-const createClassesTable = `
-  CREATE TABLE IF NOT EXISTS Classes (
-    ClassID INT AUTO_INCREMENT PRIMARY KEY,
-    ClassName VARCHAR(255) UNIQUE NOT NULL,
-    Description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`;
-
-const createTypesTable = `
-  CREATE TABLE IF NOT EXISTS Types (
-    TypeID INT AUTO_INCREMENT PRIMARY KEY,
-    TypeName VARCHAR(255) UNIQUE NOT NULL,
-    Description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`;
 
 // Initialize tables
 pool.query(createOrdersTable, (err) => {
