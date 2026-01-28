@@ -147,15 +147,22 @@ export default function CartPage() {
                           <button
                             onClick={() => handleQuantityChange(item.ItemID, item.quantity - 1)}
                             style={{
-                              width: "32px",
-                              height: "32px",
-                              backgroundColor: "#f5f5f5",
-                              border: "1px solid #e0e0e0",
+                              width: "36px",
+                              height: "36px",
+                              backgroundColor: "#e8f5e9",
+                              color: "#2e7d32",
+                              border: "1px solid #c8e6c9",
                               borderRadius: "6px",
                               cursor: "pointer",
-                              fontWeight: "700",
-                              fontSize: "1.2rem"
+                              fontWeight: "800",
+                              fontSize: "1.2rem",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              transition: "all 0.2s"
                             }}
+                            onMouseOver={(e) => e.target.style.backgroundColor = "#c8e6c9"}
+                            onMouseOut={(e) => e.target.style.backgroundColor = "#e8f5e9"}
                           >
                             -
                           </button>
@@ -169,25 +176,34 @@ export default function CartPage() {
                               width: "60px",
                               padding: "8px",
                               textAlign: "center",
-                              border: "1px solid #e0e0e0",
+                              border: "1px solid #43a047",
                               borderRadius: "6px",
                               fontSize: "1rem",
-                              fontWeight: "600"
+                              fontWeight: "700",
+                              backgroundColor: "#4caf50",
+                              color: "white"
                             }}
                           />
                           <button
                             onClick={() => handleQuantityChange(item.ItemID, item.quantity + 1)}
                             disabled={item.quantity >= item.Quantity}
                             style={{
-                              width: "32px",
-                              height: "32px",
-                              backgroundColor: item.quantity >= item.Quantity ? "#e0e0e0" : "#f5f5f5",
-                              border: "1px solid #e0e0e0",
+                              width: "36px",
+                              height: "36px",
+                              backgroundColor: item.quantity >= item.Quantity ? "#f5f5f5" : "#e8f5e9",
+                              color: item.quantity >= item.Quantity ? "#bdbdbd" : "#2e7d32",
+                              border: "1px solid #c8e6c9",
                               borderRadius: "6px",
                               cursor: item.quantity >= item.Quantity ? "not-allowed" : "pointer",
-                              fontWeight: "700",
-                              fontSize: "1.2rem"
+                              fontWeight: "800",
+                              fontSize: "1.2rem",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              transition: "all 0.2s"
                             }}
+                            onMouseOver={(e) => !e.target.disabled && (e.target.style.backgroundColor = "#c8e6c9")}
+                            onMouseOut={(e) => !e.target.disabled && (e.target.style.backgroundColor = "#e8f5e9")}
                           >
                             +
                           </button>
