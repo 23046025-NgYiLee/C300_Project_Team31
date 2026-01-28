@@ -44,32 +44,6 @@ const pool = mysql.createPool({
 
 
 
-// Initialize tables
-pool.query(createOrdersTable, (err) => {
-  if (err) console.error('Error creating orders table:', err);
-  else console.log('Orders table ready');
-});
-
-pool.query(createOrderItemsTable, (err) => {
-  if (err) console.error('Error creating order_items table:', err);
-  else console.log('Order items table ready');
-});
-
-pool.query(createBrandsTable, (err) => {
-  if (err) console.error('Error creating brands table:', err);
-  else console.log('Brands table ready');
-});
-
-pool.query(createClassesTable, (err) => {
-  if (err) console.error('Error creating classes table:', err);
-  else console.log('Classes table ready');
-});
-
-pool.query(createTypesTable, (err) => {
-  if (err) console.error('Error creating types table:', err);
-  else console.log('Types table ready');
-});
-
 app.get('/', (req, res) => {
   res.send('API Server is running');
 });
