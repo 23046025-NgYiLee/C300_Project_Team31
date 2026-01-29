@@ -38,9 +38,28 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'inventory_management_thinkclay',
   port: process.env.DB_PORT || 61002,
   waitForConnections: true,
-  connectionLimit: 5,
-  queueLimit: 10
+  connectionLimit: 4,
+  queueLimit: 0
 });
+
+// Helper to handle DB queries with automatic retries for connection limits
+const safeQuery = async (query, params = [], retries = 3) => {
+  const promisePool = pool.promise();
+  for (let i = 0; i < retries; i++) {
+    try {
+      const [results] = await promisePool.query(query, params);
+      return results;
+    } catch (err) {
+      if ((err.code === 'ER_USER_LIMIT_REACHED' || err.code === 'PROTOCOL_CONNECTION_LOST') && i < retries - 1) {
+        console.warn(`[DB] Limit hit. Retrying (${i + 1}/${retries}) in 1s...`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
+        continue;
+      }
+      console.error(`[DB] Query failed after ${i + 1} attempts:`, err.message);
+      throw err;
+    }
+  }
+};
 
 
 
@@ -110,7 +129,7 @@ app.post('/change-password', async (req, res) => {
 });
 
 // Get all stocks with optional search and filter parameters
-app.get('/api/stocks', (req, res) => {
+app.get('/api/stocks', async (req, res) => {
   const { search, brand, class: itemClass, type, minQty, maxQty } = req.query;
   let sql = 'SELECT * FROM Inventory WHERE 1=1';
   const params = [];
@@ -125,27 +144,35 @@ app.get('/api/stocks', (req, res) => {
   if (minQty) { sql += ' AND Quantity >= ?'; params.push(parseInt(minQty)); }
   if (maxQty) { sql += ' AND Quantity <= ?'; params.push(parseInt(maxQty)); }
   sql += ' ORDER BY ItemName ASC';
-  pool.query(sql, params, (err, results) => {
-    if (err) return res.status(500).json({ error: "Failed to fetch stocks" });
-    res.json(results);
-  });
+
+  try {
+    const results = await safeQuery(sql, params);
+    res.json(Array.isArray(results) ? results : []);
+  } catch (err) {
+    console.error('Error fetching stocks:', err.message);
+    res.status(500).json({ error: "Failed to fetch stocks", details: err.message });
+  }
 });
 
 // Get unique filter values for dropdowns
 app.get('/api/stocks/filters/values', async (req, res) => {
   try {
-    const [brandsData] = await pool.promise().query('SELECT DISTINCT Brand FROM Inventory WHERE Brand IS NOT NULL AND Brand != "" ORDER BY Brand ASC');
-    const [classesData] = await pool.promise().query('SELECT DISTINCT ItemClass FROM Inventory WHERE ItemClass IS NOT NULL AND ItemClass != "" ORDER BY ItemClass ASC');
-    const [typesData] = await pool.promise().query('SELECT DISTINCT ItemType FROM Inventory WHERE ItemType IS NOT NULL AND ItemType != "" ORDER BY ItemType ASC');
+    const brandsData = await safeQuery('SELECT DISTINCT Brand FROM Inventory WHERE Brand IS NOT NULL AND Brand != "" ORDER BY Brand ASC');
+    const classesData = await safeQuery('SELECT DISTINCT ItemClass FROM Inventory WHERE ItemClass IS NOT NULL AND ItemClass != "" ORDER BY ItemClass ASC');
+    const typesData = await safeQuery('SELECT DISTINCT ItemType FROM Inventory WHERE ItemType IS NOT NULL AND ItemType != "" ORDER BY ItemType ASC');
 
     res.json({
-      brands: brandsData.map(row => row.Brand),
-      classes: classesData.map(row => row.ItemClass),
-      types: typesData.map(row => row.ItemType)
+      brands: (brandsData || []).map(row => row.Brand),
+      classes: (classesData || []).map(row => row.ItemClass),
+      types: (typesData || []).map(row => row.ItemType)
     });
   } catch (err) {
-    console.error('Error fetching filter values:', err);
-    res.status(500).json({ error: "Failed to fetch filter values" });
+    console.error('Error fetching filter values:', err.message);
+    res.status(500).json({
+      error: "Failed to fetch filter values",
+      details: err.message,
+      code: err.code
+    });
   }
 });
 
@@ -253,15 +280,14 @@ app.get('/api/reports/summary', async (req, res) => {
   };
 
   try {
-    // Run queries sequentially to stay within connection limit
+    // Run queries sequentially using safeQuery for resilience
     for (const key of Object.keys(queries)) {
-      const [results] = await pool.promise().query(queries[key]);
-      data[key] = results;
+      data[key] = await safeQuery(queries[key]);
     }
     res.json(data);
   } catch (err) {
-    console.error('Error fetching reports summary:', err);
-    res.status(500).json({ error: "Failed to fetch reports summary" });
+    console.error('Error fetching reports summary:', err.message);
+    res.status(500).json({ error: "Failed to fetch reports summary", details: err.message });
   }
 });
 
@@ -374,11 +400,13 @@ app.post('/api/stocktaking/finalize', async (req, res) => {
 
 // Brand/Class/Type Reference Table APIs
 // Brands CRUD
-app.get('/api/brands', (req, res) => {
-  pool.query('SELECT * FROM Brands ORDER BY BrandName ASC', (err, results) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch brands' });
+app.get('/api/brands', async (req, res) => {
+  try {
+    const results = await safeQuery('SELECT * FROM Brands ORDER BY BrandName ASC');
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch brands' });
+  }
 });
 
 app.post('/api/brands', (req, res) => {
@@ -412,11 +440,13 @@ app.delete('/api/brands/:id', (req, res) => {
 });
 
 // Classes CRUD
-app.get('/api/classes', (req, res) => {
-  pool.query('SELECT * FROM Classes ORDER BY ClassName ASC', (err, results) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch classes' });
+app.get('/api/classes', async (req, res) => {
+  try {
+    const results = await safeQuery('SELECT * FROM Classes ORDER BY ClassName ASC');
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch classes' });
+  }
 });
 
 app.post('/api/classes', (req, res) => {
@@ -450,11 +480,13 @@ app.delete('/api/classes/:id', (req, res) => {
 });
 
 // Types CRUD
-app.get('/api/types', (req, res) => {
-  pool.query('SELECT * FROM Types ORDER BY TypeName ASC', (err, results) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch types' });
+app.get('/api/types', async (req, res) => {
+  try {
+    const results = await safeQuery('SELECT * FROM Types ORDER BY TypeName ASC');
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch types' });
+  }
 });
 
 app.post('/api/types', (req, res) => {

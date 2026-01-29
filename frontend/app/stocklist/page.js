@@ -44,15 +44,18 @@ export default function StockListPage() {
   // Fetch filter options on mount
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/stocks/filters/values`)
-      .then(res => res.json())
-      .then(data => setFilterOptions(data))
+      .then(res => res.ok ? res.json() : Promise.reject('Server error'))
+      .then(data => {
+        if (data && !data.error) {
+          setFilterOptions(prev => ({ ...prev, ...data }));
+        }
+      })
       .catch(err => console.error('Error fetching filter options:', err));
   }, []);
 
   // Fetch stocks with filters
   useEffect(() => {
     const params = new URLSearchParams();
-
     if (searchTerm) params.append('search', searchTerm);
     if (filterBrand) params.append('brand', filterBrand);
     if (filterClass) params.append('class', filterClass);
@@ -63,17 +66,29 @@ export default function StockListPage() {
     const queryString = params.toString();
     const url = `${API_BASE_URL}/api/stocks${queryString ? '?' + queryString : ''}`;
 
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setStocks(data);
-        } else {
-          console.error("Stocks data is not an array:", data);
-          setStocks([]);
-        }
-      })
-      .catch(() => setStocks([]));
+    const fetchStocks = (attempt = 1) => {
+      fetch(url)
+        .then(res => res.ok ? res.json() : Promise.reject('Server error'))
+        .then(data => {
+          if (Array.isArray(data)) {
+            setStocks(data);
+          } else {
+            console.error("Stocks data is not an array:", data);
+            setStocks([]);
+          }
+        })
+        .catch(err => {
+          console.error(`Error fetching stocks (attempt ${attempt}):`, err);
+          if (attempt < 3) {
+            console.log("Retrying in 1s...");
+            setTimeout(() => fetchStocks(attempt + 1), 1000);
+          } else {
+            setStocks([]);
+          }
+        });
+    };
+
+    fetchStocks();
   }, [searchTerm, filterBrand, filterClass, filterType, minQuantity, maxQuantity]);
 
   // Clear all filters
@@ -224,7 +239,7 @@ export default function StockListPage() {
               onChange={(e) => setFilterBrand(e.target.value)}
             >
               <option value="">All Names</option>
-              {filterOptions.brands.map(brand => (
+              {filterOptions.brands && filterOptions.brands.map(brand => (
                 <option key={brand} value={brand}>{brand}</option>
               ))}
             </select>
@@ -239,7 +254,7 @@ export default function StockListPage() {
               onChange={(e) => setFilterClass(e.target.value)}
             >
               <option value="">All Classes</option>
-              {filterOptions.classes.map(cls => (
+              {filterOptions.classes && filterOptions.classes.map(cls => (
                 <option key={cls} value={cls}>{cls}</option>
               ))}
             </select>
@@ -254,7 +269,7 @@ export default function StockListPage() {
               onChange={(e) => setFilterType(e.target.value)}
             >
               <option value="">All Types</option>
-              {filterOptions.types.map(type => (
+              {filterOptions.types && filterOptions.types.map(type => (
                 <option key={type} value={type}>{type}</option>
               ))}
             </select>
