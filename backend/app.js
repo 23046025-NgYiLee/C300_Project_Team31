@@ -132,24 +132,21 @@ app.get('/api/stocks', (req, res) => {
 });
 
 // Get unique filter values for dropdowns
-app.get('/api/stocks/filters/values', (req, res) => {
-  const queries = {
-    brands: 'SELECT DISTINCT Brand FROM Inventory WHERE Brand IS NOT NULL AND Brand != "" ORDER BY Brand ASC',
-    classes: 'SELECT DISTINCT ItemClass FROM Inventory WHERE ItemClass IS NOT NULL AND ItemClass != "" ORDER BY ItemClass ASC',
-    types: 'SELECT DISTINCT ItemType FROM Inventory WHERE ItemType IS NOT NULL AND ItemType != "" ORDER BY ItemType ASC'
-  };
-  const results = {};
-  let completed = 0;
-  Object.keys(queries).forEach(key => {
-    pool.query(queries[key], (err, data) => {
-      if (err) return res.status(500).json({ error: `Failed to fetch ${key}` });
-      if (key === 'brands') results.brands = data.map(row => row.Brand);
-      else if (key === 'classes') results.classes = data.map(row => row.ItemClass);
-      else if (key === 'types') results.types = data.map(row => row.ItemType);
-      completed++;
-      if (completed === Object.keys(queries).length) res.json(results);
+app.get('/api/stocks/filters/values', async (req, res) => {
+  try {
+    const [brandsData] = await pool.promise().query('SELECT DISTINCT Brand FROM Inventory WHERE Brand IS NOT NULL AND Brand != "" ORDER BY Brand ASC');
+    const [classesData] = await pool.promise().query('SELECT DISTINCT ItemClass FROM Inventory WHERE ItemClass IS NOT NULL AND ItemClass != "" ORDER BY ItemClass ASC');
+    const [typesData] = await pool.promise().query('SELECT DISTINCT ItemType FROM Inventory WHERE ItemType IS NOT NULL AND ItemType != "" ORDER BY ItemType ASC');
+
+    res.json({
+      brands: brandsData.map(row => row.Brand),
+      classes: classesData.map(row => row.ItemClass),
+      types: typesData.map(row => row.ItemType)
     });
-  });
+  } catch (err) {
+    console.error('Error fetching filter values:', err);
+    res.status(500).json({ error: "Failed to fetch filter values" });
+  }
 });
 
 // Get single stock item by ID
@@ -244,9 +241,8 @@ app.post('/api/user', (req, res) => {
 });
 
 // Consolidated Report Dashboard Summary
-app.get('/api/reports/summary', (req, res) => {
+app.get('/api/reports/summary', async (req, res) => {
   const data = {};
-  let completed = 0;
   const queries = {
     accountsReports: 'SELECT * FROM Accounts_Reports ORDER BY reportDate DESC',
     productReports: 'SELECT * FROM Product_Reports ORDER BY reportDate DESC',
@@ -256,23 +252,17 @@ app.get('/api/reports/summary', (req, res) => {
     stocks: 'SELECT * FROM Inventory ORDER BY ItemName ASC'
   };
 
-  const totalQueries = Object.keys(queries).length;
-
-  Object.keys(queries).forEach(key => {
-    pool.query(queries[key], (err, results) => {
-      if (err) {
-        console.error(`Error fetching ${key}:`, err);
-        data[key] = []; // Fallback to empty array
-      } else {
-        data[key] = results;
-      }
-
-      completed++;
-      if (completed === totalQueries) {
-        res.json(data);
-      }
-    });
-  });
+  try {
+    // Run queries sequentially to stay within connection limit
+    for (const key of Object.keys(queries)) {
+      const [results] = await pool.promise().query(queries[key]);
+      data[key] = results;
+    }
+    res.json(data);
+  } catch (err) {
+    console.error('Error fetching reports summary:', err);
+    res.status(500).json({ error: "Failed to fetch reports summary" });
+  }
 });
 
 app.get('/api/accounts_reports', (req, res) => {
@@ -341,43 +331,45 @@ app.delete('/api/transactions/:id', (req, res) => {
 });
 
 // Stock Taking Finalization
-app.post('/api/stocktaking/finalize', (req, res) => {
+app.post('/api/stocktaking/finalize', async (req, res) => {
   const { adjustments } = req.body;
   if (!adjustments || !Array.isArray(adjustments) || adjustments.length === 0) {
     return res.status(400).json({ error: 'Adjustments array is required' });
   }
 
-  let completed = 0;
   let errors = [];
+  const promisePool = pool.promise();
 
-  adjustments.forEach((adjustment, index) => {
-    const { ItemID, NewQuantity, Variance, Notes } = adjustment;
-
-    pool.query(
-      'UPDATE Inventory SET Quantity = ?, LastUpdated = NOW() WHERE ItemID = ?',
-      [NewQuantity, ItemID],
-      (err, result) => {
-        if (err) {
-          errors.push({ ItemID, error: err.message });
-        }
-        completed++;
-
-        if (completed === adjustments.length) {
-          if (errors.length > 0) {
-            return res.status(500).json({
-              error: 'Some adjustments failed',
-              details: errors,
-              successful: adjustments.length - errors.length
-            });
-          }
-          res.json({
-            message: 'Stock taking finalized successfully',
-            adjustedItems: adjustments.length
-          });
-        }
+  try {
+    // Process adjustments sequentially to avoid connection limit issues
+    for (const adjustment of adjustments) {
+      const { ItemID, NewQuantity } = adjustment;
+      try {
+        await promisePool.query(
+          'UPDATE Inventory SET Quantity = ?, LastUpdated = NOW() WHERE ItemID = ?',
+          [NewQuantity, ItemID]
+        );
+      } catch (err) {
+        errors.push({ ItemID, error: err.message });
       }
-    );
-  });
+    }
+
+    if (errors.length > 0) {
+      return res.status(500).json({
+        error: 'Some adjustments failed',
+        details: errors,
+        successful: adjustments.length - errors.length
+      });
+    }
+
+    res.json({
+      message: 'Stock taking finalized successfully',
+      adjustedItems: adjustments.length
+    });
+  } catch (err) {
+    console.error('Error in stocktaking finalize:', err);
+    res.status(500).json({ error: 'Internal server error during finalization' });
+  }
 });
 
 // Brand/Class/Type Reference Table APIs
