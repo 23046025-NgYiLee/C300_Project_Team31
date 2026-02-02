@@ -128,6 +128,54 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
+// --------- Customer Registration ---------
+app.post('/api/customer/register', async (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: 'Name, email and password are required' });
+  
+  pool.query('SELECT * FROM customers WHERE email = ?', [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+    if (results.length > 0) return res.status(409).json({ error: 'Email already registered' });
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    pool.query(
+      'INSERT INTO customers (name, email, password, created_at) VALUES (?, ?, ?, NOW())',
+      [name, email, hashedPassword],
+      (err, result) => {
+        if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+        res.status(201).json({ 
+          message: 'Customer registered successfully', 
+          customerId: result.insertId,
+          name: name,
+          email: email
+        });
+      }
+    );
+  });
+});
+
+// --------- Customer Login ---------
+app.post('/api/customer/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+  
+  pool.query('SELECT * FROM customers WHERE email = ?', [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+    if (!results || results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
+    
+    const customer = results[0];
+    const isMatch = await bcrypt.compare(password, customer.password);
+    if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
+    
+    return res.json({
+      message: 'Login successful',
+      customerId: customer.id,
+      email: customer.email,
+      name: customer.name
+    });
+  });
+});
+
 // Get all stocks with optional search and filter parameters
 app.get('/api/stocks', async (req, res) => {
   const { search, brand, class: itemClass, type, minQty, maxQty } = req.query;
@@ -236,6 +284,23 @@ app.post('/api/movements', (req, res) => {
         let updateParams = movementType === 'Transfer' ? [toLocation, itemId] : [quantity, itemId];
         pool.query(updateSql, updateParams, (updateErr) => {
           if (updateErr) return res.status(500).json({ error: 'Failed to update inventory', details: updateErr.message });
+          
+          // Create inventory report for this movement
+          const movementDetails = `${movementType}: ${item.ItemName} (${item.Brand}) - Quantity: ${quantity} | From: ${currentLocation} to ${toLoc} | Moved by: ${movedBy || 'System'}${notes ? ' | Notes: ' + notes : ''}`;
+          
+          // Try to insert into Inventory_Reports table, but don't fail the movement if it doesn't work
+          pool.query(
+            'INSERT INTO Inventory_Reports (ItemID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
+            [itemId, movementDetails],
+            (reportErr) => {
+              if (reportErr) {
+                console.error('Failed to create inventory report:', reportErr.message);
+                // Check if table exists or columns are different, but continue with movement success
+              }
+            }
+          );
+          
+          // Respond immediately after movement is recorded successfully
           res.status(201).json({ message: 'Movement recorded successfully', movementId: insertResult.insertId });
         });
       }

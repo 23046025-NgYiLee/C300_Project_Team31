@@ -18,14 +18,24 @@ export default function ShopPage() {
     setLoading(true);
 
     fetch(`${API_BASE_URL}/api/stocks`, { signal: controller.signal })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
+        // Handle different response formats
         if (Array.isArray(data)) {
           // Filter to show only items with stock
           const availableProducts = data.filter(item => item.Quantity > 0);
           setProducts(availableProducts);
+        } else if (data && typeof data === 'object' && Array.isArray(data.stocks)) {
+          // Handle nested response
+          const availableProducts = data.stocks.filter(item => item.Quantity > 0);
+          setProducts(availableProducts);
         } else {
-          console.error("Shop products data is not an array:", data);
+          console.error("Shop products data is not in expected format:", data);
           setProducts([]);
         }
         setLoading(false);
@@ -33,6 +43,7 @@ export default function ShopPage() {
       .catch(err => {
         if (err.name === 'AbortError') return;
         console.error("Error fetching shop products:", err);
+        setProducts([]);
         setLoading(false);
       });
 
