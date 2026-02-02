@@ -55,6 +55,10 @@ export default function CheckoutPage() {
         price: parseFloat(item.UnitPrice || 0)
       }));
 
+      // Get accountID if logged in
+      const customer = JSON.parse(localStorage.getItem("customer"));
+      const accountID = customer ? customer.accountID : null;
+
       // 1. Process the order in your backend
       const orderResponse = await fetch(`${API_BASE_URL}/api/orders`, {
         method: 'POST',
@@ -64,7 +68,8 @@ export default function CheckoutPage() {
           customerName,
           items: cart,
           totalAmount: calculateTotal(),
-          productionNumber: productionNumber || null
+          productionNumber: productionNumber || null,
+          accountID: accountID
         })
       });
 

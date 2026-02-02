@@ -87,7 +87,68 @@ app.post('/register', async (req, res) => {
   });
 });
 
-// --------- User Login ---------
+// --------- Customer Registration ---------
+app.post('/api/customer/register', async (req, res) => {
+  const { name, email, password } = req.body;
+  if (!email || !password || !name) return res.status(400).json({ error: 'Name, email and password are required' });
+
+  const promisePool = pool.promise();
+  try {
+    const [existing] = await promisePool.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) return res.status(409).json({ error: 'Email already registered' });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const [userResult] = await promisePool.query(
+      'INSERT INTO users (email, password) VALUES (?, ?)',
+      [email, hashedPassword]
+    );
+
+    const userId = userResult.insertId;
+
+    // Create an associated Account entry for reports
+    await promisePool.query(
+      'INSERT INTO Accounts (accountName, accountType, user_id) VALUES (?, ?, ?)',
+      [name, 'Customer', userId]
+    );
+
+    res.status(201).json({ message: 'Customer registered successfully', userId });
+  } catch (err) {
+    res.status(500).json({ error: 'Database error', details: err.message });
+  }
+});
+
+// --------- Customer Login ---------
+app.post('/api/customer/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+  const sql = `
+    SELECT u.*, a.accountID, a.accountName 
+    FROM users u 
+    JOIN Accounts a ON u.id = a.user_id 
+    WHERE u.email = ?
+  `;
+
+  pool.query(sql, [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error', details: err.message });
+    if (!results || results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
+
+    const user = results[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
+
+    return res.json({
+      message: 'Login successful',
+      userId: user.id,
+      email: user.email,
+      name: user.accountName,
+      accountID: user.accountID,
+      role: 'customer'
+    });
+  });
+});
+
+// --------- Staff Login (Original) ---------
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
@@ -586,27 +647,113 @@ app.delete('/api/types/:id', (req, res) => {
 });
 
 // Orders Endpoints
-app.post('/api/orders', (req, res) => {
-  const { customerEmail, customerName, items, totalAmount } = req.body;
+app.post('/api/orders', async (req, res) => {
+  const { customerEmail, customerName, items, totalAmount, accountID } = req.body;
   if (!customerEmail || !items || items.length === 0) return res.status(400).json({ error: 'Email and items are required' });
+
   const orderId = `ORD-${Date.now()}`;
-  pool.query(
-    'INSERT INTO orders (order_id, customer_name, customer_email, total_amount, order_date, status) VALUES (?, ?, ?, ?, NOW(), "Confirmed")',
-    [orderId, customerName, customerEmail, totalAmount],
-    (err) => {
-      if (err) return res.status(500).json({ error: 'Failed to create order' });
-      const itemsValues = items.map(item => [orderId, item.ItemName || item.name, item.quantity, parseFloat(item.UnitPrice || item.price || 0)]);
-      pool.query('INSERT INTO order_items (order_id, item_name, quantity, unit_price) VALUES ?', [itemsValues], (itemErr) => {
-        if (itemErr) console.error('Error inserting order items:', itemErr);
-        res.status(201).json({ message: 'Order created', orderId });
-      });
+  const promisePool = pool.promise();
+
+  // Use provided accountID or default to a General Revenue account if not logged in
+  let effectiveAccountID = accountID;
+  if (!effectiveAccountID) {
+    // Try to find if this email already has an account
+    const [accs] = await promisePool.query('SELECT accountID FROM Accounts a JOIN users u ON a.user_id = u.id WHERE u.email = ?', [customerEmail]);
+    if (accs.length > 0) {
+      effectiveAccountID = accs[0].accountID;
+    } else {
+      // Use a generic revenue account ID (assuming 1 is general revenue, or we could create one)
+      effectiveAccountID = 1;
     }
-  );
+  }
+
+  try {
+    // 1. Create the main order record
+    await promisePool.query(
+      'INSERT INTO orders (order_id, customer_name, customer_email, total_amount, order_date, status) VALUES (?, ?, ?, ?, NOW(), "Confirmed")',
+      [orderId, customerName, customerEmail, totalAmount]
+    );
+
+    // 2. Insert order items
+    const itemsValues = items.map(item => [orderId, item.ItemName || item.name, item.quantity, parseFloat(item.UnitPrice || item.price || 0)]);
+    await promisePool.query('INSERT INTO order_items (order_id, item_name, quantity, unit_price) VALUES ?', [itemsValues]);
+
+    // 3. Process each item for inventory and reports
+    for (const item of items) {
+      const itemName = item.ItemName || item.name;
+      const quantity = item.quantity;
+      const itemId = item.ItemID; // If Available
+
+      // A. Find ItemID if not provided
+      let actualItemId = itemId;
+      if (!actualItemId) {
+        const [invItems] = await promisePool.query('SELECT ItemID FROM Inventory WHERE ItemName = ?', [itemName]);
+        if (invItems.length > 0) actualItemId = invItems[0].ItemID;
+      }
+
+      if (actualItemId) {
+        // B. Deduct Inventory
+        await promisePool.query(
+          'UPDATE Inventory SET Quantity = Quantity - ?, LastUpdated = NOW() WHERE ItemID = ?',
+          [quantity, actualItemId]
+        );
+
+        // C. Record Movement
+        await promisePool.query(
+          'INSERT INTO MovementHistory (ItemID, MovementType, FromLocation, ToLocation, Quantity, MovedBy, Notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [actualItemId, 'Shipment', 'Warehouse', 'Customer', quantity, 'Customer Checkout', `Order ${orderId}`]
+        );
+
+        // D. Update Product Reports
+        await promisePool.query(
+          'INSERT INTO Product_Reports (productID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
+          [actualItemId, `Product sold via order ${orderId}. Quantity: ${quantity}`]
+        );
+
+        // E. Update Inventory Reports
+        await promisePool.query(
+          'INSERT INTO Inventory_Reports (inventoryID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
+          [actualItemId, `Inventory deduction for order ${orderId}. Quantity: ${quantity}`]
+        );
+      }
+    }
+
+    // 4. Record Financial Transaction
+    const [transResult] = await promisePool.query(
+      'INSERT INTO Transactions (accountID, amount, transactionDate, description) VALUES (?, ?, NOW(), ?)',
+      [effectiveAccountID, totalAmount, `Customer Order ${orderId}`]
+    );
+    const transactionId = transResult.insertId;
+
+    // 5. Update Accounts Reports (Revenue)
+    await promisePool.query(
+      'INSERT INTO Accounts_Reports (accountID, reportDate, reportDetails, amount) VALUES (?, NOW(), ?, ?)',
+      [effectiveAccountID, `Revenue from order ${orderId}`, totalAmount]
+    );
+
+    // 6. Update Transaction Reports
+    await promisePool.query(
+      'INSERT INTO Transaction_Reports (transactionID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
+      [transactionId, `Analysis for order ${orderId}. Total revenue: $${totalAmount}`]
+    );
+
+    res.status(201).json({ message: 'Order processed successfully', orderId });
+
+  } catch (err) {
+    console.error('Error processing order:', err);
+    res.status(500).json({ error: 'Failed to process order completely', details: err.message });
+  }
 });
 
 app.get('/api/orders', (req, res) => {
   const { email } = req.query;
-  let sql = 'SELECT o.*, COUNT(oi.id) as item_count FROM orders o LEFT JOIN order_items oi ON o.order_id = oi.order_id';
+  let sql = `
+    SELECT o.*, 
+           COUNT(oi.id) as item_count,
+           GROUP_CONCAT(CONCAT(oi.item_name, ' (', oi.quantity, ')') SEPARATOR ', ') as items
+    FROM orders o 
+    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+  `;
   let params = [];
 
   if (email) {
