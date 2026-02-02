@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from "react";
 import CustomerLayout from "../../partials/CustomerLayout";
 import styles from "../../AdminDashboard/dashboard.module.css";
+import { API_BASE_URL } from "../../../config/api";
 
 export default function MyOrdersPage() {
+  const [customer, setCustomer] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 

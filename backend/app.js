@@ -276,6 +276,7 @@ app.get('/api/reports/summary', async (req, res) => {
     inventoryReports: 'SELECT * FROM Inventory_Reports ORDER BY reportDate DESC',
     transactionReports: 'SELECT * FROM Transaction_Reports ORDER BY reportDate DESC',
     transactions: 'SELECT * FROM Transactions ORDER BY transactionDate DESC',
+    customerOrders: 'SELECT * FROM orders ORDER BY order_date DESC',
     stocks: 'SELECT * FROM Inventory ORDER BY ItemName ASC'
   };
 
