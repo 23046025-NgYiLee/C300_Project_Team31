@@ -113,3 +113,37 @@ export const sendShipmentNotificationEmail = async (shipmentData) => {
     return { success: false, error: error.text || error.message || 'Unknown error' };
   }
 };
+
+/**
+ * Send welcome email to new customer
+ * @param {Object} customerData - Customer details
+ * @param {string} customerData.customerName - Customer's name
+ * @param {string} customerData.customerEmail - Customer's email address
+ * @returns {Promise<Object>} Result with success status
+ */
+export const sendWelcomeEmail = async (customerData) => {
+  try {
+    const templateParams = {
+      to_email: customerData.customerEmail,
+      to_name: customerData.customerName,
+      customer_name: customerData.customerName,
+      reply_to: customerData.customerEmail
+    };
+
+    console.log('Sending welcome email with params:', templateParams);
+
+    // Send email via EmailJS using the specified template
+    const response = await emailjs.send(
+      'service_io5eyf8',        // Your Service ID
+      'template_dcnyg2h',        // Welcome email template ID
+      templateParams
+    );
+
+    console.log('Welcome email sent successfully:', response);
+    return { success: true, response };
+  } catch (error) {
+    console.error('Failed to send welcome email:', error);
+    console.error('Error details:', error.text || error.message || JSON.stringify(error));
+    return { success: false, error: error.text || error.message || 'Unknown error' };
+  }
+};
