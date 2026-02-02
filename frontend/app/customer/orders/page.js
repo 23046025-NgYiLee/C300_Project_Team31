@@ -7,7 +7,6 @@ import { API_BASE_URL } from "../../../config/api";
 export default function MyOrdersPage() {
   const [customer, setCustomer] = useState(null);
   const [orders, setOrders] = useState([]);
-  const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
