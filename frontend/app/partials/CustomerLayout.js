@@ -9,19 +9,20 @@ export default function CustomerLayout({ children, activePage = "" }) {
     const [cartCount, setCartCount] = useState(0);
 
     useEffect(() => {
-        const loggedCustomer = JSON.parse(localStorage.getItem("customer")) || { name: "Guest", email: "" };
-        setCustomer(loggedCustomer);
-        
+        const loggedCustomer = JSON.parse(localStorage.getItem("customer"));
+        const customerState = loggedCustomer || { name: "Guest", email: "", isGuest: true };
+        setCustomer(customerState);
+
         // Update cart count
         updateCartCount();
-        
+
         // Listen for cart updates
         const handleCartUpdate = () => updateCartCount();
         window.addEventListener('cartUpdated', handleCartUpdate);
-        
+
         return () => window.removeEventListener('cartUpdated', handleCartUpdate);
     }, []);
-    
+
     const updateCartCount = () => {
         setCartCount(getCartItemCount());
     };
@@ -45,10 +46,14 @@ export default function CustomerLayout({ children, activePage = "" }) {
                         className={styles.searchInput}
                     />
                 </div>
-                {customer && (
+                {customer && !customer.isGuest ? (
                     <div className={styles.userSection}>
                         <span className={styles.userName}>{customer.name || customer.email}</span>
                         <button onClick={handleLogout} className={styles.logoutBtn}>Logout</button>
+                    </div>
+                ) : (
+                    <div className={styles.userSection}>
+                        <Link href="/customer-login" className={styles.logoutBtn} style={{ textDecoration: 'none', backgroundColor: '#1976d2' }}>Login / Register</Link>
                     </div>
                 )}
             </div>
@@ -92,9 +97,15 @@ export default function CustomerLayout({ children, activePage = "" }) {
                             <span className={styles.navIcon}>📦</span>
                             My Orders
                         </Link>
+                        {customer?.isGuest && (
+                            <Link href="/customer-register" className={styles.navItem} style={{ color: '#ec407a', fontWeight: '700' }}>
+                                <span className={styles.navIcon}>✨</span>
+                                Join Us / Register
+                            </Link>
+                        )}
                         <Link href="/customer/profile" className={`${styles.navItem} ${activePage === "profile" ? styles.active : ""}`}>
                             <span className={styles.navIcon}>👤</span>
-                            Profile
+                            {customer?.isGuest ? "Guest Profile" : "My Profile"}
                         </Link>
                     </nav>
                 </aside>

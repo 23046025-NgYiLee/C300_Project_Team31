@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from "react";
 import CustomerLayout from "../../partials/CustomerLayout";
 import styles from "../../AdminDashboard/dashboard.module.css";
+import { API_BASE_URL } from "../../../config/api";
 
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState([]);
+  const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export default function MyOrdersPage() {
                 <tr style={{ borderBottom: "2px solid #e0e0e0" }}>
                   <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Order ID</th>
                   <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Date</th>
-                  <th style={{ textAlign: "center", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Items</th>
+                  <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Items / Details</th>
                   <th style={{ textAlign: "right", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Total</th>
                   <th style={{ textAlign: "center", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Status</th>
                   <th style={{ textAlign: "left", padding: "16px", color: "#2c3e50", fontWeight: 600 }}>Tracking</th>
@@ -76,17 +78,8 @@ export default function MyOrdersPage() {
                     <td style={{ padding: "16px", color: "#546e7a" }}>
                       {new Date(order.order_date).toLocaleDateString()}
                     </td>
-                    <td style={{ padding: "16px", textAlign: "center" }}>
-                      <span style={{
-                        backgroundColor: "#e3f2fd",
-                        color: "#1565c0",
-                        padding: "4px 12px",
-                        borderRadius: "12px",
-                        fontWeight: "600",
-                        fontSize: "0.85rem"
-                      }}>
-                        {order.item_count}
-                      </span>
+                    <td style={{ padding: "16px", color: "#546e7a", fontSize: "0.85rem" }}>
+                      {order.items || "Order details..."}
                     </td>
                     <td style={{ padding: "16px", textAlign: "right", fontWeight: "700", color: "#4caf50" }}>
                       ${parseFloat(order.total_amount || 0).toFixed(2)}

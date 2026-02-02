@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import CustomerLayout from '../../partials/CustomerLayout';
+import Link from 'next/link';
 import styles from '../../AdminDashboard/dashboard.module.css';
 
 export default function CustomerProfile() {
@@ -9,7 +10,7 @@ export default function CustomerProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: '', 
+    email: '',
     phone: '',
     address: '',
     city: '',
@@ -62,36 +63,36 @@ export default function CustomerProfile() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Update customer data in localStorage
     const updatedCustomer = {
       ...customer,
       ...formData
     };
-    
+
     localStorage.setItem('customer', JSON.stringify(updatedCustomer));
     setCustomer(updatedCustomer);
     setIsEditing(false);
     setMessage('Profile updated successfully!');
-    
+
     setTimeout(() => setMessage(''), 3000);
   };
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setMessage('New passwords do not match!');
       setTimeout(() => setMessage(''), 3000);
       return;
     }
-    
+
     if (passwordData.newPassword.length < 6) {
       setMessage('Password must be at least 6 characters long!');
       setTimeout(() => setMessage(''), 3000);
       return;
     }
-    
+
     // In a real application, you would send this to the backend
     setMessage('Password changed successfully!');
     setPasswordData({
@@ -100,15 +101,27 @@ export default function CustomerProfile() {
       confirmPassword: ''
     });
     setShowPassword(false);
-    
+
     setTimeout(() => setMessage(''), 3000);
   };
 
-  if (!customer) {
+  if (!customer || customer.isGuest) {
     return (
-      <CustomerLayout>
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-          <p>Loading profile...</p>
+      <CustomerLayout activePage="profile">
+        <div style={{ padding: '4rem 2rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+          <div style={{ fontSize: '5rem', marginBottom: '2rem' }}>👤</div>
+          <h1 style={{ color: '#2c3e50', marginBottom: '1rem' }}>Guest Profile</h1>
+          <p style={{ color: '#546e7a', fontSize: '1.2rem', marginBottom: '2rem' }}>
+            You are currently browsing as a guest. Create an account to save your profile details, track orders, and faster checkout!
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <Link href="/customer-register" className={styles.newRequestBtn} style={{ textDecoration: 'none', padding: '12px 30px' }}>
+              Create Account
+            </Link>
+            <Link href="/customer-login" className={styles.newRequestBtn} style={{ textDecoration: 'none', padding: '12px 30px', backgroundColor: '#546e7a' }}>
+              Login
+            </Link>
+          </div>
         </div>
       </CustomerLayout>
     );
@@ -140,9 +153,9 @@ export default function CustomerProfile() {
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           marginBottom: '2rem'
         }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '1.5rem'
           }}>
@@ -432,9 +445,9 @@ export default function CustomerProfile() {
           borderRadius: '8px',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '1.5rem'
           }}>
