@@ -17,7 +17,7 @@ export default function CustomerDashboard() {
     const loggedCustomer = JSON.parse(localStorage.getItem("customer"));
     if (!loggedCustomer) {
       // If not logged in, create a guest session
-      const guestCustomer = { name: "Guest Customer", email: "" };
+      const guestCustomer = { name: "Guest Customer", email: "", isGuest: true };
       localStorage.setItem("customer", JSON.stringify(guestCustomer));
       setCustomer(guestCustomer);
     } else {

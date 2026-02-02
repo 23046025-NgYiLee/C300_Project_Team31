@@ -582,101 +582,110 @@ app.delete('/api/types/:id', (req, res) => {
 });
 
 // Orders Endpoints
+// Orders Endpoints
 app.post('/api/orders', async (req, res) => {
   const { customerEmail, customerName, items, totalAmount, accountID } = req.body;
   if (!customerEmail || !items || items.length === 0) return res.status(400).json({ error: 'Email and items are required' });
 
   const orderId = `ORD-${Date.now()}`;
   const promisePool = pool.promise();
-
-  // Use provided accountID or default to a General Revenue account if not logged in
-  let effectiveAccountID = accountID;
-  if (!effectiveAccountID) {
-    // Try to find if this email already has an account
-    const [accs] = await promisePool.query('SELECT accountID FROM Accounts a JOIN users u ON a.user_id = u.id WHERE u.email = ?', [customerEmail]);
-    if (accs.length > 0) {
-      effectiveAccountID = accs[0].accountID;
-    } else {
-      // Use a generic revenue account ID (assuming 1 is general revenue, or we could create one)
-      effectiveAccountID = 1;
-    }
-  }
+  let connection;
 
   try {
+    connection = await promisePool.getConnection();
+    await connection.beginTransaction();
+
+    // 0. Determine effectiveAccountID
+    let effectiveAccountID = accountID;
+    if (!effectiveAccountID) {
+      const [accs] = await connection.query('SELECT accountID FROM Accounts a JOIN users u ON a.user_id = u.id WHERE u.email = ?', [customerEmail]);
+      if (accs.length > 0) {
+        effectiveAccountID = accs[0].accountID;
+      } else {
+        const [anyAcc] = await connection.query('SELECT accountID FROM Accounts LIMIT 1');
+        effectiveAccountID = anyAcc.length > 0 ? anyAcc[0].accountID : null;
+      }
+    }
+
     // 1. Create the main order record
-    await promisePool.query(
+    await connection.query(
       'INSERT INTO orders (order_id, customer_name, customer_email, total_amount, order_date, status) VALUES (?, ?, ?, ?, NOW(), "Confirmed")',
       [orderId, customerName, customerEmail, totalAmount]
     );
 
     // 2. Insert order items
     const itemsValues = items.map(item => [orderId, item.ItemName || item.name, item.quantity, parseFloat(item.UnitPrice || item.price || 0)]);
-    await promisePool.query('INSERT INTO order_items (order_id, item_name, quantity, unit_price) VALUES ?', [itemsValues]);
+    await connection.query('INSERT INTO order_items (order_id, item_name, quantity, unit_price) VALUES ?', [itemsValues]);
 
     // 3. Process each item for inventory and reports
     for (const item of items) {
       const itemName = item.ItemName || item.name;
       const quantity = item.quantity;
-      const itemId = item.ItemID; // If Available
+      const itemId = item.ItemID;
 
-      // A. Find ItemID if not provided
       let actualItemId = itemId;
       if (!actualItemId) {
-        const [invItems] = await promisePool.query('SELECT ItemID FROM Inventory WHERE ItemName = ?', [itemName]);
+        const [invItems] = await connection.query('SELECT ItemID FROM Inventory WHERE ItemName = ?', [itemName]);
         if (invItems.length > 0) actualItemId = invItems[0].ItemID;
       }
 
       if (actualItemId) {
         // B. Deduct Inventory
-        await promisePool.query(
+        await connection.query(
           'UPDATE Inventory SET Quantity = Quantity - ?, LastUpdated = NOW() WHERE ItemID = ?',
           [quantity, actualItemId]
         );
 
         // C. Record Movement
-        await promisePool.query(
+        await connection.query(
           'INSERT INTO MovementHistory (ItemID, MovementType, FromLocation, ToLocation, Quantity, MovedBy, Notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
           [actualItemId, 'Shipment', 'Warehouse', 'Customer', quantity, 'Customer Checkout', `Order ${orderId}`]
         );
 
-        // D. Update Product Reports
-        await promisePool.query(
-          'INSERT INTO Product_Reports (productID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
-          [actualItemId, `Product sold via order ${orderId}. Quantity: ${quantity}`]
-        );
-
-        // E. Update Inventory Reports
-        await promisePool.query(
+        // D. Update Inventory Reports
+        await connection.query(
           'INSERT INTO Inventory_Reports (inventoryID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
           [actualItemId, `Inventory deduction for order ${orderId}. Quantity: ${quantity}`]
         );
       }
     }
 
-    // 4. Record Financial Transaction
-    const [transResult] = await promisePool.query(
-      'INSERT INTO Transactions (accountID, amount, transactionDate, description) VALUES (?, ?, NOW(), ?)',
-      [effectiveAccountID, totalAmount, `Customer Order ${orderId}`]
-    );
-    const transactionId = transResult.insertId;
+    // 4. Record Financial Transaction (Only if we have a valid accountID)
+    if (effectiveAccountID) {
+      // Use ProductionNumber for description as schema lacks 'description' column
+      const [transResult] = await connection.query(
+        'INSERT INTO Transactions (accountID, amount, transactionDate, ProductionNumber) VALUES (?, ?, NOW(), ?)',
+        [effectiveAccountID, totalAmount, `Order ${orderId}`]
+      );
+      const transactionId = transResult.insertId;
 
-    // 5. Update Accounts Reports (Revenue)
-    await promisePool.query(
-      'INSERT INTO Accounts_Reports (accountID, reportDate, reportDetails, amount) VALUES (?, NOW(), ?, ?)',
-      [effectiveAccountID, `Revenue from order ${orderId}`, totalAmount]
-    );
+      // 5. Update Accounts Reports (Revenue)
+      // No 'amount' column in Accounts_Reports.
+      await connection.query(
+        'INSERT INTO Accounts_Reports (accountID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
+        [effectiveAccountID, `Revenue from order ${orderId}. Amount: $${totalAmount}`]
+      );
 
-    // 6. Update Transaction Reports
-    await promisePool.query(
-      'INSERT INTO Transaction_Reports (transactionID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
-      [transactionId, `Analysis for order ${orderId}. Total revenue: $${totalAmount}`]
-    );
+      // 6. Update Transaction Reports
+      await connection.query(
+        'INSERT INTO Transaction_Reports (transactionID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
+        [transactionId, `Analysis for order ${orderId}. Total revenue: $${totalAmount}`]
+      );
+    }
 
+    await connection.commit();
     res.status(201).json({ message: 'Order processed successfully', orderId });
 
   } catch (err) {
-    console.error('Error processing order:', err);
-    res.status(500).json({ error: 'Failed to process order completely', details: err.message });
+    if (connection) await connection.rollback();
+    console.error('Order processing error:', err);
+    res.status(500).json({
+      error: 'Failed to process order completely',
+      message: err.message,
+      code: err.code
+    });
+  } finally {
+    if (connection) connection.release();
   }
 });
 

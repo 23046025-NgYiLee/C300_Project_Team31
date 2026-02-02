@@ -52,8 +52,13 @@ export default function CustomerLayout({ children, activePage = "" }) {
                         <button onClick={handleLogout} className={styles.logoutBtn}>Logout</button>
                     </div>
                 ) : (
-                    <div className={styles.userSection}>
-                        <Link href="/customer-login" className={styles.logoutBtn} style={{ textDecoration: 'none', backgroundColor: '#1976d2' }}>Login / Register</Link>
+                    <div className={styles.userSection} style={{ gap: '10px' }}>
+                        <Link href="/customer-login" className={styles.logoutBtn} style={{ textDecoration: 'none', backgroundColor: '#546e7a' }}>
+                            Login
+                        </Link>
+                        <Link href="/customer-register" className={styles.logoutBtn} style={{ textDecoration: 'none', backgroundColor: '#1976d2' }}>
+                            Register
+                        </Link>
                     </div>
                 )}
             </div>
@@ -66,6 +71,12 @@ export default function CustomerLayout({ children, activePage = "" }) {
                             <span className={styles.navIcon}>🏠</span>
                             Home
                         </Link>
+                        {customer?.isGuest && (
+                            <Link href="/customer-login" className={styles.navItem} style={{ border: '2px dashed #ec407a', margin: '10px 0', borderRadius: '8px' }}>
+                                <span className={styles.navIcon}>✨</span>
+                                <strong>Login / Join Us</strong>
+                            </Link>
+                        )}
                         <Link href="/customer/shop" className={`${styles.navItem} ${activePage === "shop" ? styles.active : ""}`}>
                             <span className={styles.navIcon}>🛍️</span>
                             Shop Products
@@ -97,12 +108,6 @@ export default function CustomerLayout({ children, activePage = "" }) {
                             <span className={styles.navIcon}>📦</span>
                             My Orders
                         </Link>
-                        {customer?.isGuest && (
-                            <Link href="/customer-register" className={styles.navItem} style={{ color: '#ec407a', fontWeight: '700' }}>
-                                <span className={styles.navIcon}>✨</span>
-                                Join Us / Register
-                            </Link>
-                        )}
                         <Link href="/customer/profile" className={`${styles.navItem} ${activePage === "profile" ? styles.active : ""}`}>
                             <span className={styles.navIcon}>👤</span>
                             {customer?.isGuest ? "Guest Profile" : "My Profile"}
