@@ -36,9 +36,12 @@ export default function ReportsPage() {
     // Transaction Reports data
     const [transactionReports, setTransactionReports] = useState([]);
     const [transactions, setTransactions] = useState([]);
+    const [customerOrders, setCustomerOrders] = useState([]);
     const [transactionStats, setTransactionStats] = useState({
         totalTransactions: 0,
-        totalAmount: 0
+        totalAmount: 0,
+        totalOrders: 0,
+        orderAmount: 0
     });
 
     const [loading, setLoading] = useState(true);
@@ -102,9 +105,17 @@ export default function ReportsPage() {
                 const transData = data.transactions || [];
                 setTransactions(transData);
                 const totalTransAmount = transData.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+                
+                // Handle Customer Orders
+                const ordersData = data.customerOrders || [];
+                setCustomerOrders(ordersData);
+                const totalOrderAmount = ordersData.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
+                
                 setTransactionStats({
                     totalTransactions: transData.length,
-                    totalAmount: totalTransAmount
+                    totalAmount: totalTransAmount,
+                    totalOrders: ordersData.length,
+                    orderAmount: totalOrderAmount
                 });
 
                 setLoading(false);
@@ -634,26 +645,101 @@ export default function ReportsPage() {
                         <div className={styles.statCard}>
                             <div className={styles.statIcon} style={{ background: '#e8f5e9' }}>💰</div>
                             <div className={styles.statInfo}>
-                                <div className={styles.statLabel}>Total Amount</div>
+                                <div className={styles.statLabel}>Transaction Amount</div>
                                 <div className={styles.statValue}>${transactionStats.totalAmount.toFixed(2)}</div>
                             </div>
                         </div>
                         <div className={styles.statCard}>
-                            <div className={styles.statIcon} style={{ background: '#f3e5f5' }}>📋</div>
+                            <div className={styles.statIcon} style={{ background: '#fff3e0' }}>🛒</div>
                             <div className={styles.statInfo}>
-                                <div className={styles.statLabel}>Reports Generated</div>
-                                <div className={styles.statValue}>{transactionReports.length}</div>
+                                <div className={styles.statLabel}>Customer Orders</div>
+                                <div className={styles.statValue}>{transactionStats.totalOrders}</div>
                             </div>
                         </div>
                         <div className={styles.statCard}>
-                            <div className={styles.statIcon} style={{ background: '#fff3e0' }}>📊</div>
+                            <div className={styles.statIcon} style={{ background: '#f3e5f5' }}>💵</div>
                             <div className={styles.statInfo}>
-                                <div className={styles.statLabel}>Average Transaction</div>
-                                <div className={styles.statValue}>
-                                    ${transactions.length > 0 ? (transactionStats.totalAmount / transactions.length).toFixed(2) : '0.00'}
-                                </div>
+                                <div className={styles.statLabel}>Order Revenue</div>
+                                <div className={styles.statValue}>${transactionStats.orderAmount.toFixed(2)}</div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Customer Orders Table */}
+                    <div style={{
+                        backgroundColor: "white",
+                        borderRadius: "8px",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+                        padding: "20px",
+                        marginBottom: "30px",
+                        overflowX: "auto"
+                    }}>
+                        <h3 style={{ color: "#4e5dbdff", marginBottom: "20px", fontSize: "1.3rem" }}>
+                            🛍️ Customer Orders
+                        </h3>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                            <thead>
+                                <tr style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #4e5dbdff" }}>
+                                    <th style={{ textAlign: "left", padding: "12px", color: "#4e5dbdff", fontWeight: "600" }}>Order ID</th>
+                                    <th style={{ textAlign: "left", padding: "12px", color: "#4e5dbdff", fontWeight: "600" }}>Customer</th>
+                                    <th style={{ textAlign: "left", padding: "12px", color: "#4e5dbdff", fontWeight: "600" }}>Email</th>
+                                    <th style={{ textAlign: "left", padding: "12px", color: "#4e5dbdff", fontWeight: "600" }}>Date</th>
+                                    <th style={{ textAlign: "left", padding: "12px", color: "#4e5dbdff", fontWeight: "600" }}>Amount</th>
+                                    <th style={{ textAlign: "left", padding: "12px", color: "#4e5dbdff", fontWeight: "600" }}>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan="6" style={{ textAlign: "center", padding: "40px", color: "#999" }}>
+                                            Loading customer orders...
+                                        </td>
+                                    </tr>
+                                ) : customerOrders.length > 0 ? (
+                                    customerOrders.map((order) => (
+                                        <tr key={order.order_id} style={{ borderBottom: "1px solid #eee" }}>
+                                            <td style={{ padding: "12px", fontWeight: "bold", color: "#333" }}>
+                                                {order.order_id}
+                                            </td>
+                                            <td style={{ padding: "12px", color: "#555" }}>
+                                                {order.customer_name || 'N/A'}
+                                            </td>
+                                            <td style={{ padding: "12px", color: "#555" }}>
+                                                {order.customer_email}
+                                            </td>
+                                            <td style={{ padding: "12px", color: "#666" }}>
+                                                {order.order_date ? new Date(order.order_date).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                }) : "N/A"}
+                                            </td>
+                                            <td style={{ padding: "12px", color: "#2e7d32", fontWeight: "600" }}>
+                                                ${parseFloat(order.total_amount || 0).toFixed(2)}
+                                            </td>
+                                            <td style={{ padding: "12px" }}>
+                                                <span style={{
+                                                    backgroundColor: order.status === 'Confirmed' ? '#e8f5e9' : '#fff3e0',
+                                                    color: order.status === 'Confirmed' ? '#2e7d32' : '#f57c00',
+                                                    padding: "4px 12px",
+                                                    borderRadius: "12px",
+                                                    fontSize: "0.85rem",
+                                                    fontWeight: "500"
+                                                }}>
+                                                    {order.status || 'Pending'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="6" style={{ textAlign: "center", padding: "40px", color: "#999" }}>
+                                            No customer orders found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
 
                     {/* Transaction History Table */}
@@ -666,7 +752,7 @@ export default function ReportsPage() {
                         overflowX: "auto"
                     }}>
                         <h3 style={{ color: "#4e5dbdff", marginBottom: "20px", fontSize: "1.3rem" }}>
-                            Transaction History
+                            💳 Internal Transactions
                         </h3>
                         <table style={{ width: "100%", borderCollapse: "collapse" }}>
                             <thead>
