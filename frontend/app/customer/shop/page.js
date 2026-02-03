@@ -14,6 +14,7 @@ export default function ShopPage() {
   const [addedToCart, setAddedToCart] = useState({});
 
   useEffect(() => {
+    console.log('Shop Page - API_BASE_URL:', API_BASE_URL);
     const controller = new AbortController();
     setLoading(true);
 
