@@ -30,10 +30,12 @@ export default function ShopPage() {
         if (Array.isArray(data)) {
           // Filter to show only items with stock
           const availableProducts = data.filter(item => item.Quantity > 0);
+          console.log('Sample product with image:', availableProducts[0]?.ImagePath);
           setProducts(availableProducts);
         } else if (data && typeof data === 'object' && Array.isArray(data.stocks)) {
           // Handle nested response
           const availableProducts = data.stocks.filter(item => item.Quantity > 0);
+          console.log('Sample product with image:', availableProducts[0]?.ImagePath);
           setProducts(availableProducts);
         } else {
           console.error("Shop products data is not in expected format:", data);
@@ -165,7 +167,10 @@ export default function ShopPage() {
                   <img
                     src={`${API_BASE_URL}/images/${product.ImagePath || 'placeholder.png'}`}
                     alt={product.ItemName}
-                    onError={(e) => { e.target.src = `${API_BASE_URL}/images/placeholder.png` }}
+                    onError={(e) => { 
+                      console.log(`Image failed to load: ${e.target.src}`);
+                      e.target.src = `${API_BASE_URL}/images/placeholder.png`;
+                    }}
                     style={{
                       width: "100%",
                       height: "100%",
