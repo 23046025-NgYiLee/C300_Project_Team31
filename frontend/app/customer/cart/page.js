@@ -121,7 +121,7 @@ export default function CartPage() {
                             <img
                               src={`${API_BASE_URL}/images/${item.ImagePath || 'placeholder.png'}`}
                               alt={item.ItemName}
-                              onError={(e) => { 
+                              onError={(e) => {
                                 console.log(`Cart image failed: ${e.target.src}`);
                                 e.target.src = `${API_BASE_URL}/images/placeholder.png`;
                               }}

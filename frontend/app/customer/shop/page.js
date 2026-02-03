@@ -154,27 +154,25 @@ export default function ShopPage() {
                 onMouseOver={(e) => e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)"}
                 onMouseOut={(e) => e.currentTarget.style.boxShadow = "none"}>
                 <div style={{
-                  width: "100%",
-                  height: "150px",
-                  backgroundColor: "#f5f5f5",
-                  borderRadius: "8px",
-                  marginBottom: "16px",
+                  background: "linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)",
+                  padding: "18px 0",
+                  textAlign: "center",
                   display: "flex",
+                  flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "center",
-                  overflow: "hidden"
+                  borderBottom: "1px solid #e0e0e0"
                 }}>
                   <img
                     src={`${API_BASE_URL}/images/${product.ImagePath || 'placeholder.png'}`}
-                    alt={product.ItemName}
-                    onError={(e) => { 
-                      console.log(`Image failed to load: ${e.target.src}`);
-                      e.target.src = `${API_BASE_URL}/images/placeholder.png`;
-                    }}
+                    alt={`${product.ItemName} image`}
+                    onError={(e) => { e.target.src = `${API_BASE_URL}/images/placeholder.png` }}
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover"
+                      width: "80%",
+                      height: "180px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
                     }}
                   />
                 </div>
