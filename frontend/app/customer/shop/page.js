@@ -159,9 +159,18 @@ export default function ShopPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "3rem"
+                  overflow: "hidden"
                 }}>
-                  📦
+                  <img
+                    src={`${API_BASE_URL}/images/${product.ImagePath || 'placeholder.png'}`}
+                    alt={product.ItemName}
+                    onError={(e) => { e.target.src = `${API_BASE_URL}/images/placeholder.png` }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover"
+                    }}
+                  />
                 </div>
                 <h4 style={{
                   fontSize: "1.1rem",

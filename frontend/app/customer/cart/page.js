@@ -4,6 +4,7 @@ import CustomerLayout from "../../partials/CustomerLayout";
 import styles from "../../AdminDashboard/dashboard.module.css";
 import Link from "next/link";
 import { getCart, removeFromCart, updateCartItemQuantity, clearCart, getCartTotal } from "../../../utils/cartUtils";
+import { API_BASE_URL } from "../../../config/api";
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
@@ -115,9 +116,18 @@ export default function CartPage() {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            fontSize: "1.5rem"
+                            overflow: "hidden"
                           }}>
-                            📦
+                            <img
+                              src={`${API_BASE_URL}/images/${item.ImagePath || 'placeholder.png'}`}
+                              alt={item.ItemName}
+                              onError={(e) => { e.target.src = `${API_BASE_URL}/images/placeholder.png` }}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover"
+                              }}
+                            />
                           </div>
                           <div>
                             <strong style={{ fontSize: "1rem", color: "#2c3e50", display: "block" }}>
