@@ -42,15 +42,15 @@ export default function PaymentPage() {
       });
   }, []);
 
-  const totalPayment = payments.reduce((acc, item) => {
+  const totalPayment = Array.isArray(payments) ? payments.reduce((acc, item) => {
     const qty = item.Quantity || 0;
     const price = parseFloat(item.UnitPrice) || 0;
     return acc + (qty * price);
-  }, 0);
+  }, 0) : 0;
 
-  const totalRevenue = customerOrders.reduce((acc, order) => {
+  const totalRevenue = Array.isArray(customerOrders) ? customerOrders.reduce((acc, order) => {
     return acc + parseFloat(order.total_amount || 0);
-  }, 0);
+  }, 0) : 0;
 
   return (
     <DashboardLayout activePage="payment">

@@ -193,19 +193,19 @@ app.post('/change-password', async (req, res) => {
 app.post('/api/customer/register', async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) return res.status(400).json({ error: 'Name, email and password are required' });
-  
+
   pool.query('SELECT * FROM customers WHERE email = ?', [email], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error', details: err.message });
     if (results.length > 0) return res.status(409).json({ error: 'Email already registered' });
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
     pool.query(
       'INSERT INTO customers (name, email, password, created_at) VALUES (?, ?, ?, NOW())',
       [name, email, hashedPassword],
       (err, result) => {
         if (err) return res.status(500).json({ error: 'Database error', details: err.message });
-        res.status(201).json({ 
-          message: 'Customer registered successfully', 
+        res.status(201).json({
+          message: 'Customer registered successfully',
           customerId: result.insertId,
           name: name,
           email: email
@@ -219,15 +219,15 @@ app.post('/api/customer/register', async (req, res) => {
 app.post('/api/customer/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
-  
+
   pool.query('SELECT * FROM customers WHERE email = ?', [email], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error', details: err.message });
     if (!results || results.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
-    
+
     const customer = results[0];
     const isMatch = await bcrypt.compare(password, customer.password);
     if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
-    
+
     return res.json({
       message: 'Login successful',
       customerId: customer.id,
@@ -345,10 +345,10 @@ app.post('/api/movements', (req, res) => {
         let updateParams = movementType === 'Transfer' ? [toLocation, itemId] : [quantity, itemId];
         pool.query(updateSql, updateParams, (updateErr) => {
           if (updateErr) return res.status(500).json({ error: 'Failed to update inventory', details: updateErr.message });
-          
+
           // Create inventory report for this movement
           const movementDetails = `${movementType}: ${item.ItemName} (${item.Brand}) - Quantity: ${quantity} | From: ${currentLocation} to ${toLoc} | Moved by: ${movedBy || 'System'}${notes ? ' | Notes: ' + notes : ''}`;
-          
+
           // Try to insert into Inventory_Reports table, but don't fail the movement if it doesn't work
           pool.query(
             'INSERT INTO Inventory_Reports (ItemID, reportDate, reportDetails) VALUES (?, NOW(), ?)',
@@ -360,7 +360,7 @@ app.post('/api/movements', (req, res) => {
               }
             }
           );
-          
+
           // Respond immediately after movement is recorded successfully
           res.status(201).json({ message: 'Movement recorded successfully', movementId: insertResult.insertId });
         });
@@ -442,11 +442,13 @@ app.get('/api/transaction_reports', (req, res) => {
     res.json(results);
   });
 });
-app.get('/api/transactions', (req, res) => {
-  pool.query('SELECT * FROM Transactions ORDER BY transactionDate DESC', (err, results) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch transactions' });
-    res.json(results);
-  });
+app.get('/api/transactions', async (req, res) => {
+  try {
+    const results = await safeQuery('SELECT * FROM Transactions ORDER BY transactionDate DESC');
+    res.json(Array.isArray(results) ? results : []);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch transactions', details: err.message });
+  }
 });
 
 // Transaction CRUD Operations
@@ -474,13 +476,15 @@ app.put('/api/transactions/:id', (req, res) => {
   });
 });
 
-app.delete('/api/transactions/:id', (req, res) => {
+app.delete('/api/transactions/:id', async (req, res) => {
   const { id } = req.params;
-  pool.query('DELETE FROM Transactions WHERE transactionID = ?', [id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to delete transaction', details: err.message });
+  try {
+    const result = await safeQuery('DELETE FROM Transactions WHERE transactionID = ?', [id]);
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Transaction not found' });
     res.json({ message: 'Transaction deleted successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete transaction', details: err.message });
+  }
 });
 
 // Stock Taking Finalization
@@ -754,7 +758,7 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-app.get('/api/orders', (req, res) => {
+app.get('/api/orders', async (req, res) => {
   const { email } = req.query;
   let sql = `
     SELECT o.*, 
@@ -772,10 +776,13 @@ app.get('/api/orders', (req, res) => {
 
   sql += ' GROUP BY o.order_id ORDER BY o.order_date DESC';
 
-  pool.query(sql, params, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch orders' });
-    res.json(results);
-  });
+  try {
+    const results = await safeQuery(sql, params);
+    res.json(Array.isArray(results) ? results : []);
+  } catch (err) {
+    console.error('Error fetching orders:', err.message);
+    res.status(500).json({ error: 'Failed to fetch orders', details: err.message });
+  }
 });
 
 app.get('/api/orders/:orderId', (req, res) => {
